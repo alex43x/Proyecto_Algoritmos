@@ -7,6 +7,7 @@ class Torneo:
         self.fechaDeInicio = fechaDeInicio
         self.fechaDeFin = fechaDeFin
         
+
 class Equipos:
     def __init__(self, identificador, pais, abreviatura, confederacion, grupo):
         self.identificador = identificador
@@ -15,8 +16,9 @@ class Equipos:
         self.confederacion = confederacion
         self.grupo = grupo
 
+
 class Partido:
-    def __init__(self, anio, mes, dia, minuto, horaDeInicio, identificadorEquipoUno,identificadorEquipoDos, golesEquipoUno, golesEquipoDos,tarjetasAmarillasEquipoUno, tarjetasAmarillasEquipoDos,tarjetasRojasEquipoUno, tarjetasRojasEquipoDos,idPartido, puntosEquipoUno, puntosEquipoDos, jornada):
+    def __init__(self, anio, mes, dia, minuto, horaDeInicio,identificadorEquipoUno, identificadorEquipoDos,golesEquipoUno, golesEquipoDos,tarjetasAmarillasEquipoUno, tarjetasAmarillasEquipoDos,tarjetasRojasEquipoUno, tarjetasRojasEquipoDos,idPartido, puntosEquipoUno, puntosEquipoDos, jornada):
         self.anio = anio
         self.mes = mes
         self.dia = dia
@@ -35,13 +37,3 @@ class Partido:
         self.puntosEquipoUno = puntosEquipoUno
         self.puntosEquipoDos = puntosEquipoDos
         self.jornada = jornada
-
-        
-      
-
-        
-        
-        
-        
-
-    
