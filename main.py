@@ -9,7 +9,7 @@ def main():
     crear_tablas()  # crea las tablas si no existen
 
     # Crear un torneo
-    torneo = Torneo(nombreTorneo="Copa Nacional", fechaDeInicio="14-10-2025", fechaDeFin="10-12-2025",sede="Chile")
+    torneo = Torneo(nombreTorneo="Copa Nacional", fechaDeInicio="2025-10-14", fechaDeFin="2025-12-10",sede="Chile")
     torneo_id = torneo.guardar()
     print(f"Torneo creado: {torneo.nombre} (ID: {torneo_id})")
 

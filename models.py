@@ -1,72 +1,112 @@
-import datetime 
+import datetime
+import random
 
 class Torneo:
-    def __init__(self, nombre_torneo, sede, fecha_de_inicio, fecha_de_fin, grupos):
-        self.nombre_torneo = nombre_torneo
+    def __init__(self, nombreTorneo, sede, fechaDeInicio, fechaDeFin):
+        self.nombreTorneo = nombreTorneo
         self.sede = sede
-        self.fecha_de_inicio = fecha_de_inicio
-        self.fecha_de_fin = fecha_de_fin
-    def partidos_por_fecha(self, fecha, lista_partidos):
+        self.fechaDeInicio = fechaDeInicio
+        self.fechaDeFin = fechaDeFin
+
+    def partidosPorFecha(self, fecha, listaPartidos):
         # Muestra los partidos que se juegan en una fecha dada
-            print(f"Partidos del {fecha.strftime('%d/%m/%Y')}")
-            for p in lista_partidos:
-                if p.fecha.date() == fecha.date():
-                    print(f"{p.identificador_equipo_uno} vs {p.identificador_equipo_dos} - {p.hora_de_inicio}:{p.minuto:02d}")     
+        print(f"Partidos del {fecha.strftime('%d/%m/%Y')}")
+        for p in listaPartidos:
+            if p.fecha.date() == fecha.date():
+                print(f"{p.identificadorEquipoUno} vs {p.identificadorEquipoDos} - {p.horaDeInicio}:{p.minuto:02d}")
+
+    def sorteoGrupos(self, listaEquipos, grupos, maxEuropa=2):
+        random.shuffle(listaEquipos)
+        asignaciones = {g.idGrupo: [] for g in grupos}
+        for equipo in listaEquipos:
+            asignado = False
+            random.shuffle(grupos)
+            for grupo in grupos:
+                confeds = [e.confederacion for e in asignaciones[grupo.idGrupo]]
+                if equipo.confederacion not in confeds:
+                    asignaciones[grupo.idGrupo].append(equipo)
+                    equipo.idGrupo = grupo.idGrupo
+                    asignado = True
+                    break
+                if equipo.confederacion == "UEFA" and confeds.count("UEFA") < maxEuropa:
+                    asignaciones[grupo.idGrupo].append(equipo)
+                    equipo.idGrupo = grupo.idGrupo
+                    asignado = True
+                    break
+            if not asignado:
+                print(f" No se pudo asignar el equipo {equipo.nombre} (confederación: {equipo.confederacion}).")
+
+        print(" Resultado del sorteo:")
+        for grupo in grupos:
+            print(f"Grupo {grupo.nombreGrupo}:")
+            for e in asignaciones[grupo.idGrupo]:
+                print(f"  - {e.nombre} ({e.confederacion})")
+
+        return asignaciones
+
 
 class Equipos:
-    def __init__(self, identificador, pais, abreviatura, confederacion, grupo, id_grupo):
+    def __init__(self, identificador, pais, abreviatura, confederacion, grupo, idGrupo):
         self.identificador = identificador
         self.pais = pais
         self.abreviatura = abreviatura
         self.confederacion = confederacion
         self.grupo = grupo
-        self.id_grupo = id_grupo
-    def mostrar_resultados(self, lista_partidos):
+        self.idGrupo = idGrupo
+
+    def mostrarResultados(self, listaPartidos):
         # Muestra los resultados de todos los partidos de este equipo
         print(f"\nResultados de {self.pais}:")
-        for p in lista_partidos:
-            if p.identificador_equipo_uno == self.identidicador or p.identificador_equipo_dos == self.identificador:
-                print(f"{p.fecha.strftime('%d/%m/Y')} - {p.identificador_equipo_uno} {p.goles_equipo_dos} {p.identificador_equipo_dos}")
-    
+        for p in listaPartidos:
+            if p.identificadorEquipoUno == self.identificador or p.identificadorEquipoDos == self.identificador:
+                print(f"{p.fecha.strftime('%d/%m/%Y')} - {p.identificadorEquipoUno} {p.golesEquipoUno}:{p.golesEquipoDos} {p.identificadorEquipoDos}")
+
+
 class Partido:
-    def __init__(self, anio ,mes ,dia , minuto, hora_de_inicio, identificador_equipo_uno, identificador_equipo_dos, goles_equipo_uno , goles_equipo_dos, tarjetas_amarillas_equipo_uno, tarjetas_amarillas_equipo_dos, tarjetas_rojas_equipo_uno, tarjetas_rojas_equipo_dos, id_partido, puntos_equipo_uno, puntos_equipo_dos, jornada):
-        self.amio = anio
+    def __init__(self, anio, mes, dia, minuto, horaDeInicio, identificadorEquipoUno, identificadorEquipoDos,
+                 golesEquipoUno, golesEquipoDos, tarjetasAmarillasEquipoUno, tarjetasAmarillasEquipoDos,
+                 tarjetasRojasEquipoUno, tarjetasRojasEquipoDos, idPartido, puntosEquipoUno, puntosEquipoDos, jornada):
+        self.anio = anio
         self.mes = mes
         self.dia = dia
         self.minuto = minuto
-        self.hora_de_inicio = hora_de_inicio
-        self.fecha = datetime(anio, mes, dia, hora_de_inicio, minuto)
-        self.identificador_equipo_uno = identificador_equipo_uno
-        self.identificador_equipo_dos = identificador_equipo_dos
-        self.goles_equipo_uno = goles_equipo_uno
-        self.goles_equipo_dos = goles_equipo_dos
-        self.tarjetas_amarillas_equipo_uno = tarjetas_amarillas_equipo_uno
-        self.tarjetas_amarillas_equipo_dos = tarjetas_amarillas_equipo_dos
-        self.tarjetas_rojas_equipo_uno = tarjetas_rojas_equipo_uno
-        self.tarjetas_rojas_equipo_dos = tarjetas_rojas_equipo_dos
-        self.id_partido = id_partido
-        self.puntos_equipo_uno = puntos_equipo_uno
-        self.puntos_equipo_dos = puntos_equipo_dos
+        self.horaDeInicio = horaDeInicio
+        self.fecha = datetime.datetime(anio, mes, dia, horaDeInicio, minuto)
+        self.identificadorEquipoUno = identificadorEquipoUno
+        self.identificadorEquipoDos = identificadorEquipoDos
+        self.golesEquipoUno = golesEquipoUno
+        self.golesEquipoDos = golesEquipoDos
+        self.tarjetasAmarillasEquipoUno = tarjetasAmarillasEquipoUno
+        self.tarjetasAmarillasEquipoDos = tarjetasAmarillasEquipoDos
+        self.tarjetasRojasEquipoUno = tarjetasRojasEquipoUno
+        self.tarjetasRojasEquipoDos = tarjetasRojasEquipoDos
+        self.idPartido = idPartido
+        self.puntosEquipoUno = puntosEquipoUno
+        self.puntosEquipoDos = puntosEquipoDos
         self.jornada = jornada
-    def mostrar_partido(self):
-        print(f"{self.fecha.strftime('%d/%m/%Y')} - {self.identificador_equipo_uno} {self.goles_equipo_uno}:{self.goles_equipo_dos} {self.identificador_equipo_dos}")
+
+    def mostrarPartido(self):
+        print(f"{self.fecha.strftime('%d/%m/%Y')} - {self.identificadorEquipoUno} {self.golesEquipoUno}:{self.golesEquipoDos} {self.identificadorEquipoDos}")
+
 
 class Grupos:
-    def __init__(self, id_grupo, nombre_grupo ):
-        self.id_grupo = id_grupo
-        self.nombre_grupo = nombre_grupo
-    def mostrar_tabla(self, lista_equipos):
+    def __init__(self, idGrupo, nombreGrupo):
+        self.idGrupo = idGrupo
+        self.nombreGrupo = nombreGrupo
+
+    def mostrarTabla(self, listaEquipos):
         # Muestra la tabla de posiciones del grupo
-        equipos_grupo = [k for k in lista_equipos if k.id_grupo == self.id_grupo]
-        equipos_ordenados = sorted(equipos_grupo, key = lambda x: x.puntos, reverse = True)
-        
-        print(f"\nTabla del grupo {self.nombre_grupo}:")
+        equiposGrupo = [k for k in listaEquipos if k.idGrupo == self.idGrupo]
+        equiposOrdenados = sorted(equiposGrupo, key=lambda x: x.puntos, reverse=True)
+
+        print(f"Tabla del grupo {self.nombreGrupo}:")
         print("Equipo\tPuntos")
-        for k in equipos_ordenados:
+        for k in equiposOrdenados:
             print(f"{k.pais}\t{k.puntos}")
 
-        
-        
+
+
+
         
         
 
