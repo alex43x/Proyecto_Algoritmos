@@ -43,15 +43,16 @@ class Torneo:
                 print(f"  - {e.nombre} ({e.confederacion})")
 
         return asignaciones
+    
 
 
 class Equipos:
-    def __init__(self, identificador, pais, abreviatura, confederacion, grupo, idGrupo):
+    def __init__(self, identificador, pais, abreviatura, confederacion, grupos, idGrupo):
         self.identificador = identificador
         self.pais = pais
         self.abreviatura = abreviatura
         self.confederacion = confederacion
-        self.grupo = grupo
+        self.grupos = grupos
         self.idGrupo = idGrupo
 
     def mostrarResultados(self, listaPartidos):
@@ -60,8 +61,42 @@ class Equipos:
         for p in listaPartidos:
             if p.identificadorEquipoUno == self.identificador or p.identificadorEquipoDos == self.identificador:
                 print(f"{p.fecha.strftime('%d/%m/%Y')} - {p.identificadorEquipoUno} {p.golesEquipoUno}:{p.golesEquipoDos} {p.identificadorEquipoDos}")
-
-
+    def cargarEquiposAutomatico(cls):
+        listaEquipos = []
+        grupos = ["A","B","C","D","E","F"]
+        print("Carga de equipos del mundial sub-20")
+    # Asignar al anfitrion Chile (A1)
+        anfitrion = cls(
+            identificador = "A1",
+            pais = "Chile",
+            abreviatura = "CHI",
+            confederacion = "CONMEBOL",
+            grupo = "A",
+            idGrupo = 1
+        )
+        listaEquipos.append(anfitrion)
+        print("Chile al ser el anfitrion se le agrego como A1")
+    # Cargar los demas equipos
+        for grupo in grupos:
+            for numero in range(1, 5):
+                identificador = f"{grupo}{numero}"
+                if identificador == "A1":
+                    continue
+                print(f"Cargando equipo {identificador}:")
+                pais = input(" pais ").strip().title
+                conf = input(" Confederacion (UEFA, CONMEBOL, CONCACAF, CAF, OFC, AFC )").strip().upper()
+                nuevoEquipo = cls(
+                    identificador = identificador,
+                    pais = pais,
+                    abreviatura = pais[:3].uppper(),
+                    confederacion = conf,
+                    grupo = grupo,
+                    idGrupo = grupos.index(grupo) + 1
+            )
+                listaEquipos.append(nuevoEquipo)
+        print(" Carga completada")
+        return listaEquipos
+        
 class Partido:
     def __init__(self, anio, mes, dia, minuto, horaDeInicio, identificadorEquipoUno, identificadorEquipoDos,
                  golesEquipoUno, golesEquipoDos, tarjetasAmarillasEquipoUno, tarjetasAmarillasEquipoDos,
