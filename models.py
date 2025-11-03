@@ -1,3 +1,4 @@
+from database import insert_torneo,insert_equipo
 import datetime
 import random
 
@@ -44,6 +45,14 @@ class Torneo:
 
         return asignaciones
     
+    def guardar(self):
+        insert_torneo(
+            self.nombreTorneo,
+            self.sede,
+            str(self.fechaDeInicio),
+            str(self.fechaDeFin)
+        )
+        print(f"Torneo '{self.nombreTorneo}' guardado correctamente en la base de datos.")
 
 
 class Equipos:
@@ -61,42 +70,19 @@ class Equipos:
         for p in listaPartidos:
             if p.identificadorEquipoUno == self.identificador or p.identificadorEquipoDos == self.identificador:
                 print(f"{p.fecha.strftime('%d/%m/%Y')} - {p.identificadorEquipoUno} {p.golesEquipoUno}:{p.golesEquipoDos} {p.identificadorEquipoDos}")
-    def cargarEquiposAutomatico(cls):
-        listaEquipos = []
-        grupos = ["A","B","C","D","E","F"]
-        print("Carga de equipos del mundial sub-20")
-    # Asignar al anfitrion Chile (A1)
-        anfitrion = cls(
-            identificador = "A1",
-            pais = "Chile",
-            abreviatura = "CHI",
-            confederacion = "CONMEBOL",
-            grupo = "A",
-            idGrupo = 1
+                
+    def guardar(self):
+        insert_equipo(
+            self.identificador,
+            self.pais,
+            self.abreviatura,
+            self.confederacion,
+            self.grupo,
+            self.idGrupo
         )
-        listaEquipos.append(anfitrion)
-        print("Chile al ser el anfitrion se le agrego como A1")
-    # Cargar los demas equipos
-        for grupo in grupos:
-            for numero in range(1, 5):
-                identificador = f"{grupo}{numero}"
-                if identificador == "A1":
-                    continue
-                print(f"Cargando equipo {identificador}:")
-                pais = input(" pais ").strip().title
-                conf = input(" Confederacion (UEFA, CONMEBOL, CONCACAF, CAF, OFC, AFC )").strip().upper()
-                nuevoEquipo = cls(
-                    identificador = identificador,
-                    pais = pais,
-                    abreviatura = pais[:3].uppper(),
-                    confederacion = conf,
-                    grupo = grupo,
-                    idGrupo = grupos.index(grupo) + 1
-            )
-                listaEquipos.append(nuevoEquipo)
-        print(" Carga completada")
-        return listaEquipos
-        
+        print(f"Equipo '{self.pais}' guardado correctamente en la base de datos.")
+
+
 class Partido:
     def __init__(self, anio, mes, dia, minuto, horaDeInicio, identificadorEquipoUno, identificadorEquipoDos,
                  golesEquipoUno, golesEquipoDos, tarjetasAmarillasEquipoUno, tarjetasAmarillasEquipoDos,
