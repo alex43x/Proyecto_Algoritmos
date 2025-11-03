@@ -21,7 +21,6 @@ class Equipos:
             self.pais,
             self.abreviatura,
             self.confederacion,
-            self.grupo,
             self.idGrupo
         )
         print(f"Equipo '{self.pais}' guardado correctamente en la base de datos.")
