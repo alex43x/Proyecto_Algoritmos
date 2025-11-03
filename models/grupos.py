@@ -3,6 +3,7 @@ class Grupos:
     def __init__(self, nombreGrupo):
         self.nombreGrupo = nombreGrupo
     def guardar(self):
+            print(self.nombreGrupo)
             insert_grupo(
                 self.nombreGrupo
             )
