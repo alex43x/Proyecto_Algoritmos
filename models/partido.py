@@ -64,10 +64,10 @@ class Partido:
                     self.tarjetasRojasEquipoUno += 1
                     jugadoresEquipoUno[jugador] += 2
                 elif eventoAleatorio == 7:
-                    descripcion = f"Min {minuto}: 🥅 ¡GOL de {self.equipoUno}!"
+                    descripcion = f"Min {minuto}: 🥅 ¡GOL de {self.identificadorEquipoUno}!"
                     self.golesEquipoUno += 1
                 elif eventoAleatorio == 8:
-                    descripcion = f"Min {minuto}: 🥅 ¡GOL de {self.equipoDos}!"
+                    descripcion = f"Min {minuto}: 🥅 ¡GOL de {self.identificadorEquipoDos}!"
                     self.golesEquipoDos += 1
                 else:
                     descripcion = f"Min {minuto}: Nada ocurrió"
@@ -77,8 +77,8 @@ class Partido:
 
         # Crear y devolver un resumen del partido
         resumen = {
-            "equipoUno": self.equipoUno,
-            "equipoDos": self.equipoDos,
+            "equipoUno": self.identificadorEquipoUno,
+            "equipoDos": self.identificadorEquipoDos,
             "resultado": f"{self.golesEquipoUno}-{self.golesEquipoDos}",
             "amarillas": (self.tarjetasAmarillasEquipoUno, self.tarjetasAmarillasEquipoDos),
             "rojas": (self.tarjetasRojasEquipoUno, self.tarjetasRojasEquipoDos),

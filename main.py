@@ -5,7 +5,7 @@ from models import Partido
 from datetime import datetime
 
 def main():
-    print("Sistema de Gestión de Torneo de Fútbol ")
+    print("Sistema de Gestión de Torneo de Fútbol")
     crear_tablas()  # crea las tablas si no existen
 
     # Crear un torneo
@@ -19,9 +19,9 @@ def main():
     id1 = equipo1.guardar()
     id2 = equipo2.guardar()
     print(f"Equipos creados: {equipo1.pais} (ID {id1}), {equipo2.pais} (ID {id2})")
-
-
     print("\nDatos guardados correctamente en la base de datos.")
-
+    partido=Partido(anio= 2025, mes=11, dia=25, minuto=30, horaDeInicio=13, identificadorEquipoUno=equipo1.identificador, identificadorEquipoDos=equipo2.identificador,golesEquipoUno=0,golesEquipoDos=0, tarjetasAmarillasEquipoUno=0,tarjetasAmarillasEquipoDos=0,tarjetasRojasEquipoUno=0,tarjetasRojasEquipoDos=0,idPartido=3,puntosEquipoUno=0,puntosEquipoDos=0,jornada=1)
+    resumen= partido.simularPartido(99)
+    partido.mostrarPartido()
 if __name__ == "__main__":#Para ejecutar el main tienen que estar en la carpeta que contiene este archivo y ejecutar "python main.py"
     main()
