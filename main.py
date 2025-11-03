@@ -5,7 +5,7 @@ from models import Partido
 from datetime import datetime
 
 def main():
-    print("🏆 Sistema de Gestión de Torneo de Fútbol 🏆")
+    print("Sistema de Gestión de Torneo de Fútbol ")
     crear_tablas()  # crea las tablas si no existen
 
     # Crear un torneo
@@ -21,7 +21,7 @@ def main():
     print(f"Equipos creados: {equipo1.pais} (ID {id1}), {equipo2.pais} (ID {id2})")
 
 
-    print("\n✅ Datos guardados correctamente en la base de datos.")
+    print("\nDatos guardados correctamente en la base de datos.")
 
 if __name__ == "__main__":#Para ejecutar el main tienen que estar en la carpeta que contiene este archivo y ejecutar "python main.py"
     main()
