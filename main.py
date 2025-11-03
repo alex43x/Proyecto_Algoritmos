@@ -1,7 +1,7 @@
 from database import crear_tablas
-from models import Equipos
-from models import Torneo
-from models import Partido
+from models.equipos import Equipos
+from models.torneo import Torneo
+from models.partido import Partido
 from datetime import datetime
 
 def main():
