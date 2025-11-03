@@ -28,7 +28,7 @@ def crear_tablas():
         abreviatura TEXT NOT NULL,
         confederacion TEXT NOT NULL,
         grupo INTEGER NOT NULL,
-        FOREIGN KEY (grupo) REFERENCES grupos(idGrupos)
+        FOREIGN KEY (grupo) REFERENCES grupos(idGrupo)
     );
 
     CREATE TABLE IF NOT EXISTS partido (
@@ -68,13 +68,13 @@ def insert_torneo(nombreTorneo, sede, fechaDeInicio, fechaDeFin):
     conn.commit()
     conn.close()
 
-def insert_equipo(identificador, pais, abreviatura, confederacion, grupo,idGrupo):
+def insert_equipo(identificador, pais, abreviatura, confederacion, idGrupo):
     conn = conectar()
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT OR REPLACE INTO equipos (identificador, pais, abreviatura, confederacion, grupo, idGrupo)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (identificador, pais, abreviatura, confederacion, grupo, idGrupo))
+        INSERT OR REPLACE INTO equipos (identificador, pais, abreviatura, confederacion, idGrupo)
+        VALUES ( ?, ?, ?, ?, ?)
+    """, (identificador, pais, abreviatura, confederacion, idGrupo))
     conn.commit()
     conn.close()
 
@@ -93,12 +93,12 @@ def insert_partido(datos):
     """, datos)
     conn.commit()
     conn.close()
-def insert_grupo(idGrupo, nombreGrupo):
+def insert_grupo(nombreGrupo):
     conn = conectar()
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT OR REPLACE INTO grupos (idGrupo, nombreGrupo)
-        Values (?, ?)
-    """, (idGrupo, nombreGrupo))
+        INSERT OR REPLACE INTO grupos (nombreGrupo)
+        Values (?)
+    """, ( nombreGrupo))
     conn.commit()
     conn.close()
