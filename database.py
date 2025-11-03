@@ -14,39 +14,42 @@ def crear_tablas():
     CREATE TABLE IF NOT EXISTS torneo (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nombreTorneo TEXT NOT NULL,
-        sede TEXT,
-        fechaDeInicio TEXT,
-        fechaDeFin TEXT
+        sede TEXT NOT NULL,
+        fechaDeInicio TEXT NOT NULL,
+        fechaDeFin TEXT NOT NULL
     );
-
+     CREATE TABLE IF NOT EXISTS grupos(
+        idGrupo INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombreGrupo NOT NULL
+    );
     CREATE TABLE IF NOT EXISTS equipos (
         identificador TEXT PRIMARY KEY,
         pais TEXT NOT NULL,
-        abreviatura TEXT,
-        confederacion TEXT,
-        grupo TEXT,
-        idGrupo TEXT
+        abreviatura TEXT NOT NULL,
+        confederacion TEXT NOT NULL,
+        grupo INTEGER NOT NULL,
+        FOREIGN KEY (grupo) REFERENCES grupos(idGrupos)
     );
 
     CREATE TABLE IF NOT EXISTS partido (
         idPartido INTEGER PRIMARY KEY,
-        anio INTEGER,
-        mes INTEGER,
-        dia INTEGER,
-        horaDeInicio INTEGER,
-        minuto INTEGER,
-        fecha TEXT,
-        identificadorEquipoUno INTEGER,
-        identificadorEquipoDos INTEGER,
-        golesEquipoUno INTEGER,
-        golesEquipoDos INTEGER,
-        tarjetasAmarillasEquipoUno INTEGER,
-        tarjetasAmarillasEquipoDos INTEGER,
-        tarjetasRojasEquipoUno INTEGER,
-        tarjetasRojasEquipoDos INTEGER,
-        puntosEquipoUno INTEGER,
-        puntosEquipoDos INTEGER,
-        jornada INTEGER,
+        anio INTEGER NOT NULL,
+        mes INTEGER NOT NULL,
+        dia INTEGER NOT NULL,
+        horaDeInicio INTEGER NOT NULL,
+        minuto INTEGER NOT NULL,
+        fecha TEXT NOT NULL,
+        identificadorEquipoUno INTEGER NOT NULL,
+        identificadorEquipoDos INTEGER NOT NULL,
+        golesEquipoUno INTEGER NOT NULL,
+        golesEquipoDos INTEGER NOT NULL,
+        tarjetasAmarillasEquipoUno INTEGER NOT NULL,
+        tarjetasAmarillasEquipoDos INTEGER NOT NULL,
+        tarjetasRojasEquipoUno INTEGER NOT NULL,
+        tarjetasRojasEquipoDos INTEGER NOT NULL,
+        puntosEquipoUno INTEGER NOT NULL,
+        puntosEquipoDos INTEGER NOT NULL,
+        jornada INTEGER NOT NULL,
         FOREIGN KEY (identificadorEquipoUno) REFERENCES equipos(identificador),
         FOREIGN KEY (identificadorEquipoDos) REFERENCES equipos(identificador)
     );
@@ -88,5 +91,14 @@ def insert_partido(datos):
             puntosEquipoUno, puntosEquipoDos, jornada
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, datos)
+    conn.commit()
+    conn.close()
+def insert_grupo(idGrupo, nombreGrupo):
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT OR REPLACE INTO grupos (idGrupo, nombreGrupo)
+        Values (?, ?)
+    """, (idGrupo, nombreGrupo))
     conn.commit()
     conn.close()
