@@ -93,3 +93,12 @@ def insert_partido(datos):
     """, datos)
     conn.commit()
     conn.close()
+def insert_grupo(idGrupo, nombreGrupo):
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT OR REPLACE INTO grupos (idGrupo, nombreGrupo)
+        Values (?, ?)
+    """, (idGrupo, nombreGrupo))
+    conn.commit()
+    conn.close()
