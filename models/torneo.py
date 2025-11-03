@@ -1,7 +1,7 @@
 from database import insert_torneo
 import random
 class Torneo:
-    def __init__(self, nombreTorneo, sede, fechaDeInicio, fechaDeFin):
+    def __init__(self, nombreTorneo, sede, fechaDeInicio, fechaDeFin,):
         self.nombreTorneo = nombreTorneo
         self.sede = sede
         self.fechaDeInicio = fechaDeInicio
@@ -32,8 +32,6 @@ class Torneo:
                     equipo.idGrupo = grupo.idGrupo
                     asignado = True
                     break
-            if not asignado:
-                print(f" No se pudo asignar el equipo {equipo.nombre} (confederación: {equipo.confederacion}).")
 
         print(" Resultado del sorteo:")
         for grupo in grupos:
