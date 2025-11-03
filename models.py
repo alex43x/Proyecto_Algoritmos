@@ -1,3 +1,4 @@
+from database import insert_torneo,insert_equipo
 import datetime
 import random
 
@@ -43,6 +44,15 @@ class Torneo:
                 print(f"  - {e.nombre} ({e.confederacion})")
 
         return asignaciones
+    
+    def guardar(self):
+        insert_torneo(
+            self.nombreTorneo,
+            self.sede,
+            str(self.fechaDeInicio),
+            str(self.fechaDeFin)
+        )
+        print(f"Torneo '{self.nombreTorneo}' guardado correctamente en la base de datos.")
 
 
 class Equipos:
@@ -60,6 +70,17 @@ class Equipos:
         for p in listaPartidos:
             if p.identificadorEquipoUno == self.identificador or p.identificadorEquipoDos == self.identificador:
                 print(f"{p.fecha.strftime('%d/%m/%Y')} - {p.identificadorEquipoUno} {p.golesEquipoUno}:{p.golesEquipoDos} {p.identificadorEquipoDos}")
+                
+    def guardar(self):
+        insert_equipo(
+            self.identificador,
+            self.pais,
+            self.abreviatura,
+            self.confederacion,
+            self.grupo,
+            self.idGrupo
+        )
+        print(f"Equipo '{self.pais}' guardado correctamente en la base de datos.")
 
 
 class Partido:

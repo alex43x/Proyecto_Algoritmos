@@ -20,11 +20,12 @@ def crear_tablas():
     );
 
     CREATE TABLE IF NOT EXISTS equipos (
-        identificador INTEGER PRIMARY KEY,
+        identificador TEXT PRIMARY KEY,
         pais TEXT NOT NULL,
         abreviatura TEXT,
         confederacion TEXT,
-        grupo TEXT
+        grupo TEXT,
+        idGrupo TEXT
     );
 
     CREATE TABLE IF NOT EXISTS partido (
@@ -64,13 +65,13 @@ def insert_torneo(nombreTorneo, sede, fechaDeInicio, fechaDeFin):
     conn.commit()
     conn.close()
 
-def insert_equipo(identificador, pais, abreviatura, confederacion, grupo):
+def insert_equipo(identificador, pais, abreviatura, confederacion, grupo,idGrupo):
     conn = conectar()
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT OR REPLACE INTO equipos (identificador, pais, abreviatura, confederacion, grupo)
-        VALUES (?, ?, ?, ?, ?)
-    """, (identificador, pais, abreviatura, confederacion, grupo))
+        INSERT OR REPLACE INTO equipos (identificador, pais, abreviatura, confederacion, grupo, idGrupo)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (identificador, pais, abreviatura, confederacion, grupo, idGrupo))
     conn.commit()
     conn.close()
 
