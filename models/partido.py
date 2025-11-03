@@ -86,7 +86,7 @@ class Partido:
             "detalleEventos": self.eventos
         }
 
-        return resumen
+        return None
     
 
     def mostrarPartido(self):
