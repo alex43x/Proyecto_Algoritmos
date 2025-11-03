@@ -28,7 +28,7 @@ def crear_tablas():
         abreviatura TEXT NOT NULL,
         confederacion TEXT NOT NULL,
         grupo INTEGER NOT NULL,
-        FOREIGN KEY (grupo) REFERENCES grupos(idGrupos)
+        FOREIGN KEY (grupo) REFERENCES grupos(idGrupo)
     );
 
     CREATE TABLE IF NOT EXISTS partido (

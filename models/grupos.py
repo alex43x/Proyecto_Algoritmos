@@ -1,11 +1,9 @@
 from database import insert_grupo
 class Grupos:
-    def __init__(self, idGrupo, nombreGrupo):
-        self.idGrupo = idGrupo
+    def __init__(self, nombreGrupo):
         self.nombreGrupo = nombreGrupo
-    def guardarG(self):
+    def guardar(self):
             insert_grupo(
-                self.idGrupo,
                 self.nombreGrupo
             )
             print(f"Grupo {self.nombreGrupo} Guardado correctamente en la base de datos")
