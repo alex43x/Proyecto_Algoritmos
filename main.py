@@ -4,22 +4,33 @@ from database import crear_tablas
 from models.equipos import Equipos
 from models.torneo import Torneo
 from models.partido import Partido
-from models.grupos import Grupos
-from datetime import datetime
 
-def main():
-    print("Sistema de Gestión de Torneo de Fútbol")
-    crear_tablas()  # crea las tablas si no existen
+def crear_datos():
+    crear_tablas()
 
-    # Crear un torneo
-    torneo = Torneo(nombreTorneo="Copa Nacional", fechaDeInicio="2025-10-14", fechaDeFin="2025-12-10",sede="Chile")
+    torneo = Torneo(
+        nombreTorneo="Copa Nacional",
+        fechaDeInicio="2025-10-14",
+        fechaDeFin="2025-12-10",
+        sede="Chile"
+    )
     torneo_id = torneo.guardar()
-    print(f"Torneo creado: {torneo.nombreTorneo} (ID: {torneo_id})")
-    grupoA = Grupos(nombreGrupo= "A")
-    idA = grupoA.guardar()
-    # Crear equipos
-    equipo1 = Equipos(identificador="A1", pais="Chile", abreviatura="CHI", confederacion="CONMEBOL", idGrupo="1") #Importante: aca pongan los datos que necesita la clase equipo
-    equipo2 = Equipos(identificador="A3", pais="Paraguay", abreviatura="PAR", confederacion="CONMEBOL", idGrupo="1")#Acá igual
+
+    equipo1 = Equipos(
+        identificador="A1",
+        pais="Chile",
+        abreviatura="CHI",
+        confederacion="CONMEBOL",
+        idGrupo="1"
+    )
+    equipo2 = Equipos(
+        identificador="A3",
+        pais="Paraguay",
+        abreviatura="PAR",
+        confederacion="CONMEBOL",
+        idGrupo="1"
+    )
+
     id1 = equipo1.guardar()
     id2 = equipo2.guardar()
 
