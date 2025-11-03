@@ -1,11 +1,11 @@
 from database import insert_equipo
 class Equipos:
-    def __init__(self, identificador, pais, abreviatura, confederacion, grupos, idGrupo):
+    def __init__(self, identificador, pais, abreviatura, confederacion, grupo, idGrupo):
         self.identificador = identificador
         self.pais = pais
         self.abreviatura = abreviatura
         self.confederacion = confederacion
-        self.grupos = grupos
+        self.grupos = grupo
         self.idGrupo = idGrupo
 
     def mostrarResultados(self, listaPartidos):
