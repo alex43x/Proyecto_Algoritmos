@@ -102,3 +102,6 @@ def insert_grupo(nombreGrupo):
     """, ( nombreGrupo))
     conn.commit()
     conn.close()
+def conectar():
+    # Abre una conexión con la base de datos SQLite.
+    return sqlite3.connect(DB_PATH)
