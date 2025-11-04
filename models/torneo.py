@@ -1,6 +1,5 @@
 from database import insert_torneo
 import random
-from database import conectar
 class Torneo:
     def __init__(self, nombreTorneo, sede, fechaDeInicio, fechaDeFin,):
         self.nombreTorneo = nombreTorneo
@@ -51,9 +50,3 @@ class Torneo:
         )
         print(f"Torneo '{self.nombreTorneo}' guardado correctamente en la base de datos.")
     
-    def getTorneos():
-        with conectar() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT id, nombreTorneo, sede, fechaDeInicio, fechaDeFin FROM torneo")
-            torneos = cursor.fetchall()
-        return torneos
