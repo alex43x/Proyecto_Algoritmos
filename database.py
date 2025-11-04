@@ -102,3 +102,11 @@ def insert_grupo(nombreGrupo):
     """, ( nombreGrupo))
     conn.commit()
     conn.close()
+def getTorneos():
+    conn=conectar()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, nombreTorneo, sede, fechaDeInicio, fechaDeFin FROM torneo")
+    torneos = cursor.fetchall()
+    return torneos
+a=getTorneos()
+print(a)

@@ -49,4 +49,4 @@ class Torneo:
             str(self.fechaDeFin)
         )
         print(f"Torneo '{self.nombreTorneo}' guardado correctamente en la base de datos.")
-
+    
