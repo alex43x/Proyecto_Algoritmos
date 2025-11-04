@@ -56,11 +56,35 @@ def crear_datos():
 def main():
     ventana = tk.Tk()
     ventana.title("Sistema de Gestión de Torneo de Fútbol")
-    ventana.geometry("400x250")
+    ventana.geometry("800x450")
 
     titulo = tk.Label(ventana, text="Gestión de Torneo de Fútbol", font=("Arial", 14, "bold"))
     titulo.pack(pady=20)
-
+    
+    boton_conf=tk.Button(
+        ventana,
+        text="Configuración del torneo",
+        font=("Arial", 12),
+        bg="#4CAF50",
+        fg="white"
+    )
+    boton_conf.pack(pady=10)
+    boton_conf=tk.Button(
+        ventana,
+        text="Registro de Resultados",
+        font=("Arial", 12),
+        bg="#4CAF50",
+        fg="white"
+    )
+    boton_conf.pack(pady=10)
+    boton_conf=tk.Button(
+        ventana,
+        text="Informes",
+        font=("Arial", 12),
+        bg="#4CAF50",
+        fg="white"
+    )
+    boton_conf.pack(pady=10)
     boton_crear = tk.Button(
         ventana,
         text="Crear Torneo y Simular Partido",
@@ -69,7 +93,7 @@ def main():
         fg="white",
         command=crear_datos
     )
-    boton_crear.pack(pady=20)
+    boton_crear.pack(pady=10)
 
     boton_salir = tk.Button(
         ventana,
