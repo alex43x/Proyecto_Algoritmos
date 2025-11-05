@@ -1,4 +1,4 @@
-from controllers.pool import conectar
+from .pool import conectar
 
 def insert_equipo(identificador, pais, abreviatura, confederacion, grupo):
     conn = conectar()

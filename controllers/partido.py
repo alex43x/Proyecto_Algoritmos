@@ -1,4 +1,4 @@
-from controllers.pool import conectar
+from .pool import conectar
 
 def insert_partido(datos):
     conn = conectar()
