@@ -1,4 +1,4 @@
-from database import insert_torneo
+from controllers.torneo import insert_torneo
 import random
 class Torneo:
     def __init__(self, nombreTorneo, sede, fechaDeInicio, fechaDeFin,):

@@ -1,12 +1,12 @@
 import tkinter as tk
 from tkinter import messagebox
-from database import crear_tablas
+from controllers.pool import crear_tablas
 from models.equipos import Equipos
 from models.torneo import Torneo
 from models.partido import Partido
 
 def crear_datos():
-    crear_tablas()
+    crear_tablas()  # ahora conecta correctamente usando pool.py
 
     torneo = Torneo(
         nombreTorneo="Copa Nacional",
@@ -46,65 +46,56 @@ def crear_datos():
     )
 
     partido.simularPartido(15)
-
-    # Mostrar datos por consola
     partido.mostrarPartido()
 
-    # Mostrar ventana de confirmación
-    messagebox.showinfo("Éxito", f"Torneo '{torneo.nombreTorneo}' y equipos creados correctamente.\nPartido simulado.")
+    messagebox.showinfo("Éxito", f"Torneo '{torneo.nombreTorneo}' creado.\nPartido simulado correctamente.")
 
+# ---- Pantalla de configuración ----
+def pantalla_configuracion(ventana):
+    # Limpia todo el contenido actual
+    for widget in ventana.winfo_children():
+        widget.destroy()
+
+    tk.Label(ventana, text="Configuración del Torneo", font=("Arial", 14, "bold")).pack(pady=20)
+    
+    tk.Button(
+        ventana, text="Volver al menú principal",
+        font=("Arial", 12), bg="#2196F3", fg="white",
+        command=lambda: menu_principal(ventana)
+    ).pack(pady=10)
+
+# ---- Menú principal ----
+def menu_principal(ventana):
+    # Limpia los widgets anteriores (por si se regresa)
+    for widget in ventana.winfo_children():
+        widget.destroy()
+
+    tk.Label(ventana, text="Gestión de Torneo de Fútbol", font=("Arial", 14, "bold")).pack(pady=20)
+
+    opciones = [
+        ("Configuración del torneo", lambda: pantalla_configuracion(ventana)),
+        ("Registro de Resultados", None),
+        ("Informes", None),
+        ("Crear Torneo y Simular Partido", crear_datos),
+    ]
+
+    for texto, comando in opciones:
+        tk.Button(
+            ventana, text=texto, font=("Arial", 12),
+            bg="#4CAF50", fg="white", command=comando
+        ).pack(pady=10)
+
+    tk.Button(
+        ventana, text="Salir", font=("Arial", 12),
+        bg="#f44336", fg="white", command=ventana.destroy
+    ).pack(pady=10)
+
+# ---- MAIN ----
 def main():
     ventana = tk.Tk()
     ventana.title("Sistema de Gestión de Torneo de Fútbol")
     ventana.geometry("800x450")
-
-    titulo = tk.Label(ventana, text="Gestión de Torneo de Fútbol", font=("Arial", 14, "bold"))
-    titulo.pack(pady=20)
-    
-    boton_conf=tk.Button(
-        ventana,
-        text="Configuración del torneo",
-        font=("Arial", 12),
-        bg="#4CAF50",
-        fg="white"
-    )
-    boton_conf.pack(pady=10)
-    boton_conf=tk.Button(
-        ventana,
-        text="Registro de Resultados",
-        font=("Arial", 12),
-        bg="#4CAF50",
-        fg="white"
-    )
-    boton_conf.pack(pady=10)
-    boton_conf=tk.Button(
-        ventana,
-        text="Informes",
-        font=("Arial", 12),
-        bg="#4CAF50",
-        fg="white"
-    )
-    boton_conf.pack(pady=10)
-    boton_crear = tk.Button(
-        ventana,
-        text="Crear Torneo y Simular Partido",
-        font=("Arial", 12),
-        bg="#4CAF50",
-        fg="white",
-        command=crear_datos
-    )
-    boton_crear.pack(pady=10)
-
-    boton_salir = tk.Button(
-        ventana,
-        text="Salir",
-        font=("Arial", 12),
-        bg="#f44336",
-        fg="white",
-        command=ventana.destroy
-    )
-    boton_salir.pack(pady=10)
-
+    menu_principal(ventana)
     ventana.mainloop()
 
 if __name__ == "__main__":

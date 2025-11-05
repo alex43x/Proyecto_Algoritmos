@@ -1,4 +1,4 @@
-from database import insert_equipo
+from controllers.equipos import insert_equipo
 class Equipos:
     def __init__(self, identificador, pais, abreviatura, confederacion, idGrupo):
         self.identificador = identificador
