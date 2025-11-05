@@ -14,23 +14,23 @@ def crear_tablas():
     cursor.executescript("""
     CREATE TABLE IF NOT EXISTS torneo (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nombreTorneo TEXT NOT NULL,
-        sede TEXT NOT NULL,
-        fechaDeInicio TEXT NOT NULL,
-        fechaDeFin TEXT NOT NULL
+        nombreTorneo TEXT NOT NULL UNIQUE,
+        sede TEXT NOT NULL UNIQUE,
+        fechaDeInicio TEXT NOT NULL UNIQUE,
+        fechaDeFin TEXT NOT NULL UNIQUE
     );
 
     CREATE TABLE IF NOT EXISTS grupos(
         idGrupo INTEGER PRIMARY KEY AUTOINCREMENT,
-        nombreGrupo TEXT NOT NULL
+        nombreGrupo TEXT NOT NULL UNIQUE
     );
 
     CREATE TABLE IF NOT EXISTS equipos (
         identificador TEXT PRIMARY KEY,
-        pais TEXT NOT NULL,
-        abreviatura TEXT NOT NULL,
-        confederacion TEXT NOT NULL,
-        grupo INTEGER NOT NULL,
+        pais TEXT NOT NULL UNIQUE,
+        abreviatura TEXT NOT NULL UNIQUE,
+        confederacion TEXT NOT NULL UNIQUE,
+        grupo INTEGER NOT NULL UNIQUE,
         FOREIGN KEY (grupo) REFERENCES grupos(idGrupo)
     );
 

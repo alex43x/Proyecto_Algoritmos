@@ -1,4 +1,4 @@
-from .pool import conectar
+from pool import conectar
 
 def insert_grupo(nombreGrupo):
     conn = conectar()
