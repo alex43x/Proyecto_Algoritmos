@@ -1,5 +1,4 @@
-from pool import conectar
-
+from controllers.pool import conectar
 def insert_torneo(nombreTorneo, sede, fechaDeInicio, fechaDeFin):
     conn = conectar()
     cursor = conn.cursor()

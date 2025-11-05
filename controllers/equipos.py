@@ -1,4 +1,4 @@
-from pool import conectar
+from controllers.pool import conectar
 
 def insert_equipo(identificador, pais, abreviatura, confederacion, grupo):
     conn = conectar()
@@ -20,10 +20,3 @@ def get_equipo():
 insert_equipo("A1", "Argentina", "ARG", "CONMEBOL", 1)
 insert_equipo("B2", "Francia", "FRA", "UEFA", 2)
 insert_equipo("C3", "Japón", "JPN", "AFC", 3)
-
-# Obtener y mostrar en un solo print
-equipos = get_equipo()
-print("EQUIPOS REGISTRADOS:\n" + "\n".join([
-    f" | Identificador: {e[0]} | País: {e[1]} | Abrev: {e[2]} | Confed: {e[3]} | Grupo: {e[4]}"
-    for e in equipos
-]))

@@ -1,3 +1,4 @@
+from controllers.partido import insert_partido
 import datetime
 import random
 class Partido:
@@ -85,10 +86,28 @@ class Partido:
             "eventosTotales": len(self.eventos),
             "detalleEventos": self.eventos
         }
-
         return None
-    
-
+    def guardar(self):
+        insert_partido(
+            self.anio,
+            self.mes,
+            self.dia,
+            self.minuto,
+            self.horaDeInicio,
+            self.fecha,
+            self.identificadorEquipoUno,
+            self.identificadorEquipoDos,
+            self.golesEquipoUno,
+            self.golesEquipoDos,
+            self.tarjetasAmarillasEquipoUno,
+            self.tarjetasAmarillasEquipoDos,
+            self.tarjetasRojasEquipoUno,
+            self.tarjetasRojasEquipoDos,
+            self.idPartido,
+            self.puntosEquipoUno,
+            self.puntosEquipoDos,
+            self.jornada
+        )
     def mostrarPartido(self):
         print(f"{self.fecha.strftime('%d/%m/%Y')} - {self.identificadorEquipoUno} {self.golesEquipoUno}:{self.golesEquipoDos} {self.identificadorEquipoDos}")
 

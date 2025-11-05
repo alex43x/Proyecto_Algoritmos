@@ -1,4 +1,4 @@
-from database import insert_grupo
+from controllers.grupos import insert_grupo
 class Grupos:
     def __init__(self, nombreGrupo):
         self.nombreGrupo = nombreGrupo

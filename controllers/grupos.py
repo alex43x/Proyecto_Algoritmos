@@ -1,4 +1,4 @@
-from pool import conectar
+from controllers.pool import conectar
 
 def insert_grupo(nombreGrupo):
     conn = conectar()
@@ -16,5 +16,3 @@ def get_grupo():
     grupos=cursor.fetchall()
     conn.close()
     return grupos
-# Mostrar solo los nombres en un solo print
-print([nombre for (nombre,) in get_grupo()])

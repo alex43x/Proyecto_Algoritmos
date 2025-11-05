@@ -1,4 +1,4 @@
-from pool import conectar
+from controllers.pool import conectar
 
 def insert_partido(datos):
     conn = conectar()
@@ -23,13 +23,6 @@ def get_partido_sin_jugar():
     conn.close()
     return partido
     #se separa los detalles del partido, primero se carga el evento y su fecha y luego sus detalles
-print(get_partido_sin_jugar() if insert_partido((
-    1, 2025, 11, 20, 15, 30, "2025-11-20 15:30",
-    "A1", "A2",
-    0, 0,
-    0, 0,
-    0, 0,
-    0, 0, 1
-)) is None else get_partido_sin_jugar())
+
     
     
