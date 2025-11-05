@@ -9,3 +9,12 @@ def insert_grupo(nombreGrupo):
     """, (nombreGrupo,))
     conn.commit()
     conn.close()
+def get_grupo():
+    conn= conectar()
+    cursor=conn.cursor()
+    cursor.execute("SELECT nombreGrupo FROM grupos")
+    grupos=cursor.fetchall()
+    conn.close()
+    return grupos
+# Mostrar solo los nombres en un solo print
+print([nombre for (nombre,) in get_grupo()])
