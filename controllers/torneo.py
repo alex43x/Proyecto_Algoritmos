@@ -1,4 +1,4 @@
-from .pool import conectar
+from pool import conectar
 
 def insert_torneo(nombreTorneo, sede, fechaDeInicio, fechaDeFin):
     conn = conectar()
@@ -17,3 +17,4 @@ def get_torneos():
     torneos = cursor.fetchall()
     conn.close()
     return torneos
+
