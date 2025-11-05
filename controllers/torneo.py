@@ -16,9 +16,6 @@ def get_torneos():
     torneos = cursor.fetchall()
     conn.close()
     return torneos
-# Insertar dos torneos de prueba
-insert_torneo("Copa Internacional Juvenil", "Santiago de Chile", "2025-05-10", "2025-06-02")
-insert_torneo("Torneo Amistoso Sub-20", "Asunción", "2025-03-01", "2025-03-15")
 
 # Obtener los registros y mostrarlos en un único print
 torneos = get_torneos()
