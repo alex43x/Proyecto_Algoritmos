@@ -7,7 +7,8 @@ import datetime
 def pantalla_configuracion(ventana, volver_menu):
     for widget in ventana.winfo_children():
         widget.destroy()
-
+    def volver():
+        volver_menu(ventana)
     data = get_torneos()
     meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio",
              "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"]
@@ -44,13 +45,13 @@ def pantalla_configuracion(ventana, volver_menu):
 
         Torneo(nombre, sede, fecha_inicio, fecha_fin).guardar()
         messagebox.showinfo("Éxito", "Torneo registrado correctamente")
+        volver_menu(ventana)
 
-    tk.Label(ventana, text="Configuración del Torneo", font=("Segoe UI",16)).pack(pady=20)
+    tk.Label(ventana, text="Configuración del Torneo", font=("Segoe UI",16)).pack(pady=10)
 
     frame_inputs = tk.Frame(ventana)
-    frame_inputs.pack(pady=10)
+    frame_inputs.pack(pady=5)
 
-    # --- Contenido principal ---
     if len(data) == 0:
         frame_inputs = tk.Frame(ventana)
         frame_inputs.pack(pady=10)
@@ -134,9 +135,11 @@ def pantalla_configuracion(ventana, volver_menu):
             font=("Arial", 10, "bold")
         ).pack(pady=4)
 
-    # --- Botón de volver ---
     tk.Button(
-        ventana, text="Volver al menú principal",
-        font=("Arial", 12), bg="#2196F3", fg="white",
-        command=volver_menu
+        ventana,
+        text="Volver al menú principal",
+        font=("Arial",12),
+        bg="#2196F3",
+        fg="white",
+        command=volver
     ).pack(pady=4)
