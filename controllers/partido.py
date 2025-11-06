@@ -15,6 +15,23 @@ def insert_partido(datos):
     """, datos)
     conn.commit()
     conn.close()
+def update_partido(datos):
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE partido
+        SET golesEquipoUno = ?,
+            golesEquipoDos = ?,
+            tarjetasAmarillasEquipoUno = ?,
+            tarjetasAmarillasEquipoDos = ?,
+            tarjetasRojasEquipoUno = ?,
+            tarjetasRojasEquipoDos = ?,
+            puntosEquipoUno = ?,
+            puntosEquipoDos = ?,
+        WHERE idPartido = ?
+    """, datos)
+    conn.commit()
+    conn.close()
 def get_partido_sin_jugar():
     conn=conectar()
     cursor =conn.cursor()
