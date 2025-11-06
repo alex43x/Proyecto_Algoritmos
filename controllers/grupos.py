@@ -12,7 +12,7 @@ def insert_grupo(nombreGrupo):
 def get_grupo():
     conn= conectar()
     cursor=conn.cursor()
-    cursor.execute("SELECT nombreGrupo FROM grupos")
+    cursor.execute("SELECT idGrupo, nombreGrupo FROM grupos")
     grupos=cursor.fetchall()
     conn.close()
     return grupos

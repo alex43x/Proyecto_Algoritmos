@@ -27,10 +27,10 @@ def crear_tablas():
 
     CREATE TABLE IF NOT EXISTS equipos (
         identificador TEXT PRIMARY KEY,
-        pais TEXT NOT NULL UNIQUE,
-        abreviatura TEXT NOT NULL UNIQUE,
-        confederacion TEXT NOT NULL UNIQUE,
-        grupo INTEGER NOT NULL UNIQUE,
+        pais TEXT NOT NULL ,
+        abreviatura TEXT NOT NULL ,
+        confederacion TEXT NOT NULL ,
+        grupo INTEGER NOT NULL,
         FOREIGN KEY (grupo) REFERENCES grupos(idGrupo)
     );
 

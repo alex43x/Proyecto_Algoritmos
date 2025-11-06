@@ -3,11 +3,10 @@ class Grupos:
     def __init__(self, nombreGrupo):
         self.nombreGrupo = nombreGrupo
     def guardar(self):
-            print(self.nombreGrupo)
             insert_grupo(
                 self.nombreGrupo
             )
-            print(f"Grupo {self.nombreGrupo} Guardado correctamente en la base de datos")
+            print(f"{self.nombreGrupo} Guardado correctamente en la base de datos")
     def mostrarTabla(self, listaEquipos):
         # Muestra la tabla de posiciones del grupo
         equiposGrupo = [k for k in listaEquipos if k.idGrupo == self.idGrupo]

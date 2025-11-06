@@ -1,6 +1,6 @@
 import tkinter as tk
 from views.menu_principal import menu_principal
-
+from controllers.pool import crear_tablas
 # --- MAIN ---
 def main():
     ventana = tk.Tk()
@@ -9,7 +9,7 @@ def main():
 
     # Primer arranque: menú principal
     menu_principal(ventana)
-
+    crear_tablas()
     ventana.mainloop()
 
 

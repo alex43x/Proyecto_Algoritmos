@@ -17,6 +17,3 @@ def get_equipo():
     conn.close()
     return equipos
     # Insertar equipos de prueba
-insert_equipo("A1", "Argentina", "ARG", "CONMEBOL", 1)
-insert_equipo("B2", "Francia", "FRA", "UEFA", 2)
-insert_equipo("C3", "Japón", "JPN", "AFC", 3)
