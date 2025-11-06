@@ -1,7 +1,7 @@
 import sqlite3
 import os
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.abspath(_file_))
 DB_PATH = os.path.join(BASE_DIR, "..", "data", "torneo.db")
 
 def conectar():
@@ -27,10 +27,10 @@ def crear_tablas():
 
     CREATE TABLE IF NOT EXISTS equipos (
         identificador TEXT PRIMARY KEY,
-        pais TEXT NOT NULL UNIQUE,
-        abreviatura TEXT NOT NULL UNIQUE,
-        confederacion TEXT NOT NULL UNIQUE,
-        grupo INTEGER NOT NULL UNIQUE,
+        pais TEXT NOT NULL ,
+        abreviatura TEXT NOT NULL ,
+        confederacion TEXT NOT NULL ,
+        grupo INTEGER NOT NULL,
         FOREIGN KEY (grupo) REFERENCES grupos(idGrupo)
     );
 
