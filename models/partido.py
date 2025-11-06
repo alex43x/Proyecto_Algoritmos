@@ -4,7 +4,7 @@ import random
 class Partido:
     def __init__(self, anio, mes, dia, minuto, horaDeInicio, identificadorEquipoUno, identificadorEquipoDos,
                  golesEquipoUno, golesEquipoDos, tarjetasAmarillasEquipoUno, tarjetasAmarillasEquipoDos,
-                 tarjetasRojasEquipoUno, tarjetasRojasEquipoDos, idPartido, puntosEquipoUno, puntosEquipoDos, jornada):
+                 tarjetasRojasEquipoUno, tarjetasRojasEquipoDos, idPartido, jornada):
         self.anio = anio
         self.mes = mes
         self.dia = dia
@@ -20,8 +20,8 @@ class Partido:
         self.tarjetasRojasEquipoUno = tarjetasRojasEquipoUno
         self.tarjetasRojasEquipoDos = tarjetasRojasEquipoDos
         self.idPartido = idPartido
-        self.puntosEquipoUno = puntosEquipoUno
-        self.puntosEquipoDos = puntosEquipoDos
+        self.puntosEquipoUno = 0
+        self.puntosEquipoDos = 0
         self.jornada = jornada
         self.eventos = []  # Lista de eventos generados (minuto, descripción)
 
@@ -87,6 +87,14 @@ class Partido:
             "detalleEventos": self.eventos
         }
         return None
+    def asignar_puntos(self):
+        if self.golesEquipoUno > self.golesEquipoDos:
+            self.puntosEquipoUno = 3
+        elif self.golesEquipoUno < self.golesEquipoDos:
+            self.puntosEquipoDos = 3
+        else:
+            self.puntosEquipoUno = 1
+            self.puntosEquipoDos = 1
     def guardar(self):
         insert_partido(
             self.anio,
@@ -108,6 +116,3 @@ class Partido:
             self.puntosEquipoDos,
             self.jornada
         )
-    def mostrarPartido(self):
-        print(f"{self.fecha.strftime('%d/%m/%Y')} - {self.identificadorEquipoUno} {self.golesEquipoUno}:{self.golesEquipoDos} {self.identificadorEquipoDos}")
-

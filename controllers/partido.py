@@ -23,6 +23,10 @@ def get_partido_sin_jugar():
     conn.close()
     return partido
     #se separa los detalles del partido, primero se carga el evento y su fecha y luego sus detalles
-
-    
-    
+def get_puntos_partido():
+    conn=conectar()
+    cursor =conn.cursor()
+    cursor.execute("SELECT idPartido, fecha, puntosEquipoUno, puntosEquipoDos FROM partido")
+    partido=cursor.fetchall()
+    conn.close()
+    return partido
