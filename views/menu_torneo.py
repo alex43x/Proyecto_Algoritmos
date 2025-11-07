@@ -222,5 +222,5 @@ def pantalla_configuracion(ventana, volver_menu):
             command=abrir_form_equipo
         )
         b_equipos.pack(anchor="e", pady=4)
-        if len(get_equipo()) >= 24:
+        if len(get_equipo()) >= 24 or len(get_grupo())<6:
             b_equipos.config(state="disabled")

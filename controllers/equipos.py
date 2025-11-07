@@ -17,3 +17,10 @@ def get_equipo():
     conn.close()
     return equipos
     # Insertar equipos de prueba
+def get_equipos_por_grupo(idGrupo):
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM equipos WHERE grupo = ?", (idGrupo,))
+    equipos = cursor.fetchall()
+    conn.close()
+    return equipos
