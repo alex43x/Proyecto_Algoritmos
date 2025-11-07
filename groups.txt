@@ -1,0 +1,37 @@
+INSERT INTO grupos (idGrupo, nombreGrupo) VALUES (1, 'A');
+INSERT INTO grupos (idGrupo, nombreGrupo) VALUES (2, 'B');
+INSERT INTO grupos (idGrupo, nombreGrupo) VALUES (3, 'C');
+INSERT INTO grupos (idGrupo, nombreGrupo) VALUES (4, 'D');
+INSERT INTO grupos (idGrupo, nombreGrupo) VALUES (5, 'E');
+INSERT INTO grupos (idGrupo, nombreGrupo) VALUES (6, 'F');
+
+
+INSERT INTO equipos (identificador, pais, abreviatura, confederacion, grupo) VALUES ('A1', 'Argentina', 'ARG', 'CONMEBOL', 1);
+INSERT INTO equipos (identificador, pais, abreviatura, confederacion, grupo) VALUES ('A2', 'Brasil', 'BRA', 'CONMEBOL', 1);
+INSERT INTO equipos (identificador, pais, abreviatura, confederacion, grupo) VALUES ('A3', 'Uruguay', 'URU', 'CONMEBOL', 1);
+INSERT INTO equipos (identificador, pais, abreviatura, confederacion, grupo) VALUES ('A4', 'Chile', 'CHI', 'CONMEBOL', 1);
+
+INSERT INTO equipos (identificador, pais, abreviatura, confederacion, grupo) VALUES ('B1', 'Alemania', 'GER', 'UEFA', 2);
+INSERT INTO equipos (identificador, pais, abreviatura, confederacion, grupo) VALUES ('B2', 'Francia', 'FRA', 'UEFA', 2);
+INSERT INTO equipos (identificador, pais, abreviatura, confederacion, grupo) VALUES ('B3', 'España', 'ESP', 'UEFA', 2);
+INSERT INTO equipos (identificador, pais, abreviatura, confederacion, grupo) VALUES ('B4', 'Inglaterra', 'ENG', 'UEFA', 2);
+
+INSERT INTO equipos (identificador, pais, abreviatura, confederacion, grupo) VALUES ('C1', 'México', 'MEX', 'CONCACAF', 3);
+INSERT INTO equipos (identificador, pais, abreviatura, confederacion, grupo) VALUES ('C2', 'Estados Unidos', 'USA', 'CONCACAF', 3);
+INSERT INTO equipos (identificador, pais, abreviatura, confederacion, grupo) VALUES ('C3', 'Costa Rica', 'CRC', 'CONCACAF', 3);
+INSERT INTO equipos (identificador, pais, abreviatura, confederacion, grupo) VALUES ('C4', 'Canadá', 'CAN', 'CONCACAF', 3);
+
+INSERT INTO equipos (identificador, pais, abreviatura, confederacion, grupo) VALUES ('D1', 'Japón', 'JPN', 'AFC', 4);
+INSERT INTO equipos (identificador, pais, abreviatura, confederacion, grupo) VALUES ('D2', 'Corea del Sur', 'KOR', 'AFC', 4);
+INSERT INTO equipos (identificador, pais, abreviatura, confederacion, grupo) VALUES ('D3', 'Irán', 'IRN', 'AFC', 4);
+INSERT INTO equipos (identificador, pais, abreviatura, confederacion, grupo) VALUES ('D4', 'Australia', 'AUS', 'OFC', 4);
+
+INSERT INTO equipos (identificador, pais, abreviatura, confederacion, grupo) VALUES ('E1', 'Nigeria', 'NGA', 'CAF', 5);
+INSERT INTO equipos (identificador, pais, abreviatura, confederacion, grupo) VALUES ('E2', 'Senegal', 'SEN', 'CAF', 5);
+INSERT INTO equipos (identificador, pais, abreviatura, confederacion, grupo) VALUES ('E3', 'Marruecos', 'MAR', 'CAF', 5);
+INSERT INTO equipos (identificador, pais, abreviatura, confederacion, grupo) VALUES ('E4', 'Egipto', 'EGY', 'CAF', 5);
+
+INSERT INTO equipos (identificador, pais, abreviatura, confederacion, grupo) VALUES ('F1', 'Italia', 'ITA', 'UEFA', 6);
+INSERT INTO equipos (identificador, pais, abreviatura, confederacion, grupo) VALUES ('F2', 'Bélgica', 'BEL', 'UEFA', 6);
+INSERT INTO equipos (identificador, pais, abreviatura, confederacion, grupo) VALUES ('F3', 'Países Bajos', 'NED', 'UEFA', 6);
+INSERT INTO equipos (identificador, pais, abreviatura, confederacion, grupo) VALUES ('F4', 'Portugal', 'POR', 'UEFA', 6);
