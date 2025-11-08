@@ -136,3 +136,79 @@ def crear_partidos_fase_final():
     conn.commit()
     conn.close()
     print("Partidos de la fase eliminatoria creados exitosamente")
+#que viene ya de definir_enfretamientos_octavos
+#dicha lista trae (id_partido, id1, pais1, id2, pais2)
+def asignar_octavos(enfrentamientos_octavos):
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT idPartido
+        FROM partido
+        WHERE jornada = 4
+        ORDER BY idPartido ASC;
+    """)
+    partidos_j4 = cursor.fetchall()
+    for i in range(len(partidos_j4)):
+        id_partido_bd = partidos_j4[i][0]
+        id1 = enfrentamientos_octavos[i][1]  # identificador del equipo 1
+        id2 = enfrentamientos_octavos[i][3]  # identificador del equipo 2
+
+        cursor.execute("""
+            UPDATE partido
+            SET identificadorEquipoUno = ?, identificadorEquipoDos = ?
+            WHERE idPartido = ? AND jornada = 4;
+        """, (id1, id2, id_partido_bd))
+    conn.commit()
+    conn.close()
+    print("Equipos de octavos asignados correctamente en la jornada 4.")
+#pongo extra ya que en update_partido_sin_jugar de controllers.partidos
+#pide equipos-fecha , pero en caso de las eliminatorias, el codigo debe asignar 
+#los enfrentamientos, entonces los detales y fecha deben poner el usuario.
+#esos dos son generales ya que los cuartos, semis y final van a adquirir la misma metodologia.
+def actualizar_fechas_eliminatorias(jornada):
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT idPartido, fecha, hora
+        FROM partido
+        WHERE jornada = ?
+        ORDER BY idPartido ASC;
+    """, (jornada,))
+    partidos = cursor.fetchall()
+    for id_partido, fecha, hora in partidos:
+        cursor.execute("""
+            UPDATE partido
+            SET fecha = ?, hora = ?
+            WHERE idPartido = ? AND jornada = ?;
+        """, (fecha, hora, id_partido, jornada))
+    conn.commit()
+    conn.close()
+    print(f"Fechas y horas actualizadas correctamente para la jornada {jornada}.")
+def actualizar_detalles_eliminatorias(jornada):
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT idPartido,
+               golesEquipoUno, golesEquipoDos,
+               tarjetasAmarillasEquipoUno, tarjetasAmarillasEquipoDos,
+               tarjetasRojasEquipoUno, tarjetasRojasEquipoDos,
+               puntosEquipoUno, puntosEquipoDos
+        FROM partido
+        WHERE jornada = ?
+        ORDER BY idPartido ASC;
+    """, (jornada,))
+    partidos = cursor.fetchall()
+    for detalle in partidos:
+        id_partido = detalle[0]
+        datos = detalle[1:]  # para no tocar id_partidos 
+        cursor.execute("""
+            UPDATE partido
+            SET golesEquipoUno = ?, golesEquipoDos = ?,
+                tarjetasAmarillasEquipoUno = ?, tarjetasAmarillasEquipoDos = ?,
+                tarjetasRojasEquipoUno = ?, tarjetasRojasEquipoDos = ?,
+                puntosEquipoUno = ?, puntosEquipoDos = ?
+            WHERE idPartido = ? AND jornada = ?;
+        """, (*datos, id_partido, jornada))
+    conn.commit()
+    conn.close()
+    print(f"Detalles (goles, tarjetas, puntos) actualizados correctamente para la jornada {jornada}.")
