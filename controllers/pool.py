@@ -126,10 +126,13 @@ def crear_partidos_fase_final():
     ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 5),
     ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 5),
     ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 5),
-    --Final y 3er Puesto /2 PARTIDOS/J6
+    --Semifinal/2 PARTIDOS/J6 
     ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 6),
     ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 6);
+    --Final y 3er Puesto /2 PARTIDOS/J7
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 7),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 7);
     """)
     conn.commit()
     conn.close()
-    print("Partidos de la fase de grupos creados exitosamente")
+    print("Partidos de la fase eliminatoria creados exitosamente")
