@@ -118,7 +118,7 @@ def tabla_posiciones():
     # --- Mostrar tabla en consola agrupada por grupo ---
     print("\nTABLA DE POSICIONES POR GRUPO")
     print("-" * 45)
-    for idGrupo in grupos:  # sin usar .items()
+    for idGrupo in grupos: 
         print(f"\nGRUPO {idGrupo}")
         print(f"{'Identificador':<15}{'Pais':<15}{'Pts':<10}")
         print("-" * 40)
@@ -128,3 +128,33 @@ def tabla_posiciones():
     # --- Retornar solo identificador, país y puntos ---
     tabla_final = [(fila[0], fila[1], fila[3]) for fila in tabla]
     return tabla_final
+def ordenar_terceros(lista):
+    #me fui a la segura con bubble
+    n = len(lista)
+    for i in range(n - 1):
+        for j in range(n - i - 1):
+            if lista[j][2] < lista[j + 1][2]:
+                lista[j], lista[j + 1] = lista[j + 1], lista[j]
+    return lista
+
+def clasificados_eliminatoria(tabla_pos):
+    grupos = {}
+    for identificador, pais, puntos in tabla_pos:
+        grupo = identificador[0]  # Primera letra
+        if grupo not in grupos:
+            grupos[grupo] = []
+        grupos[grupo].append((identificador, pais, puntos))
+    equipos_clasificados=[]
+    terceros=[] #para verificar mejores terceros despues
+    for grupo in grupos:
+        #agrego ya el 1° y 2°, cargo aparte los 3° para compararlos despues
+        primero=grupos[grupo][0]
+        primero.append(equipos_clasificados)
+        segundo=grupos[grupo][1]
+        segundo.append(equipos_clasificados)
+        tercero = grupos[grupo][2]  # Índice 2 = tercer puesto
+        terceros.append(tercero)
+    terceros=ordenar_terceros(terceros)
+    for p in range (4):
+        clasificado_tercero= grupos[grupo][p]
+        clasificado_tercero.append(equipos_clasificados)
