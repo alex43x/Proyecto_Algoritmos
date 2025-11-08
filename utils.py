@@ -148,13 +148,14 @@ def clasificados_eliminatoria(tabla_pos):
     terceros=[] #para verificar mejores terceros despues
     for grupo in grupos:
         #agrego ya el 1° y 2°, cargo aparte los 3° para compararlos despues
-        primero=grupos[grupo][0]
-        primero.append(equipos_clasificados)
-        segundo=grupos[grupo][1]
-        segundo.append(equipos_clasificados)
+        primero = grupos[grupo][0]
+        segundo = grupos[grupo][1]
+        equipos_clasificados.append(primero)
+        equipos_clasificados.append(segundo)
         tercero = grupos[grupo][2]  # Índice 2 = tercer puesto
         terceros.append(tercero)
     terceros=ordenar_terceros(terceros)
-    for p in range (4):
-        clasificado_tercero= grupos[grupo][p]
-        clasificado_tercero.append(equipos_clasificados)
+    for p in range(4):
+        clasificado_tercero = terceros[p]
+        equipos_clasificados.append(clasificado_tercero)
+    return equipos_clasificados
