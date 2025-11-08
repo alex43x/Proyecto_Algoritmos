@@ -1,6 +1,6 @@
 import sqlite3
 import os
-
+from utils import tabla_posiciones
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "..", "data", "torneo.db")
 
@@ -104,6 +104,33 @@ def crear_partidos_fase_grupos():
     ('', '', 'F2', 'F3', 0, 0, 0, 0, 0, 0, 0, 0, 3);
     """)
     
+    conn.commit()
+    conn.close()
+    print("Partidos de la fase de grupos creados exitosamente")
+def crear_partidos_fase_final():
+    conn = conectar()
+    cursor = conn.cursor()
+    
+    cursor.executescript("""
+    INSERT INTO partido (fecha, hora, identificadorEquipoUno, identificadorEquipoDos, golesEquipoUno, golesEquipoDos, tarjetasAmarillasEquipoUno, tarjetasAmarillasEquipoDos, tarjetasRojasEquipoUno, tarjetasRojasEquipoDos, puntosEquipoUno, puntosEquipoDos, jornada) VALUES
+    -- Octavos de Final/8 PARTIDOS/J4
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 4),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 4),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 4),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 4),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 4),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 4),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 4),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 4),
+    --Cuartos de Final/4 PARTIDOS/J5
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 5),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 5),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 5),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 5),
+    --Final y 3er Puesto /2 PARTIDOS/J6
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 6),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 6);
+    """)
     conn.commit()
     conn.close()
     print("Partidos de la fase de grupos creados exitosamente")
