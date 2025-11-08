@@ -58,9 +58,9 @@ def pantalla_configuracion(ventana, volver_menu):
         messagebox.showinfo("Éxito", "Torneo registrado correctamente")
         volver_menu(ventana)
 
-    tk.Label(ventana, text="Configuración del Torneo", font=("Segoe UI", 16)).pack(pady=10)
+    tk.Label(ventana, text="Configuración General", font=("Segoe UI", 24,"bold")).pack(pady=(30,0))
 
-    # --- Si no hay torneo registrado ---
+    # Si no hay torneo registrado
     if len(data) == 0:
         frame_inputs = tk.Frame(ventana)
         frame_inputs.pack(pady=10)
@@ -91,7 +91,7 @@ def pantalla_configuracion(ventana, volver_menu):
 
         tk.Button(
             ventana, text="Guardar datos del torneo",
-            font=("Arial", 12), bg="#4CAF50", fg="white",
+            font=("Segoe UI", 12), bg="#4CAF50", fg="white",
             command=guardar_torneo
         ).pack(pady=4)
 
@@ -99,23 +99,150 @@ def pantalla_configuracion(ventana, volver_menu):
         torneo = data[0]
 
         frame_main = tk.Frame(ventana)
-        frame_main.pack(fill="x", padx=40, pady=10)
+        frame_main.pack(fill="x", padx=10, pady=10)
 
-        # --- Info del torneo ---
-        frame_info = tk.Frame(frame_main)
-        frame_info.pack(side="left", anchor="nw")
+        # Información del torneo
+        frame_info = tk.Frame(frame_main, bg="#f8f8f8", bd=3, relief="groove", padx=20, pady=20)
+        frame_info.pack(side="left", anchor="nw", padx=40, pady=20, fill="y")
 
-        tk.Label(frame_info, text=torneo[1], font=("Arial", 12, "bold")).pack(anchor="w", pady=2)
-        tk.Label(frame_info, text="Sede: " + torneo[2], font=("Arial", 10, "bold")).pack(anchor="w", pady=2)
-        tk.Label(frame_info, text="Fecha de Inicio: " + torneo[3], font=("Arial", 10, "bold")).pack(anchor="w", pady=2)
-        tk.Label(frame_info, text="Fecha de Cierre: " + torneo[4], font=("Arial", 10, "bold")).pack(anchor="w", pady=2)
+        # Título principal
+        tk.Label(
+            frame_info,
+            text="🏆 Información del Torneo",
+            font=("Segoe UI", 14, "bold"),
+            bg="#f8f8f8",
+            fg="#333"
+        ).pack(anchor="w", pady=(0, 15))
 
-        # --- Frame central ---
+        # Datos del torneo
+        tk.Label(frame_info, text=f"Nombre: {torneo[1]}", font=("Segoe UI", 11), bg="#f8f8f8", fg="#000").pack(anchor="w", pady=2)
+        tk.Label(frame_info, text=f"Sede: {torneo[2]}", font=("Segoe UI", 11), bg="#f8f8f8", fg="#000").pack(anchor="w", pady=2)
+        tk.Label(frame_info, text=f"Fecha de Inicio: {torneo[3]}", font=("Segoe UI", 10), bg="#f8f8f8", fg="#333").pack(anchor="w", pady=2)
+        tk.Label(frame_info, text=f"Fecha de Cierre: {torneo[4]}", font=("Segoe UI", 10), bg="#f8f8f8", fg="#333").pack(anchor="w", pady=2)
+
+        # Línea divisoria visual
+        tk.Frame(frame_info, height=2, bg="#68ab98").pack(fill="x", pady=15)
+
+        # --- Funciones internas ---
+        def actualizar_grupos_equipos():
+            mostrar_grupos_equipos()
+            if len(get_grupo()) >= 6:
+                b_grupos.config(state="disabled")
+            else:
+                b_grupos.config(state="normal")
+
+            if len(get_equipo()) >= 24 or len(get_grupo()) < 6:
+                b_equipos.config(state="disabled")
+            else:
+                b_equipos.config(state="normal")
+
+        def actualizar_estados_botones():
+            # Cambia color o texto según estado
+            if len(get_grupo()) >= 6:
+                b_grupos.config(bg="#cccccc", fg="#666", text="Agregar Grupo (Terminado)")
+            else:
+                b_grupos.config(bg="#68ab98", fg="white", text="Agregar Grupo")
+
+            if len(get_equipo()) >= 24:
+                b_equipos.config(bg="#cccccc", fg="#666", text="Agregar Equipo (Terminado)")
+            elif len(get_grupo()) < 6:
+                b_equipos.config(bg="#cccccc", fg="#666", text="Agregar Equipo (Faltan grupos)")
+            else:
+                b_equipos.config(bg="#68ab98", fg="white", text="Agregar Equipo")
+
+        def abrir_form_grupo():
+            if len(get_grupo()) >= 6:
+                messagebox.showinfo("Límite alcanzado", "Ya has registrado los 6 grupos permitidos.")
+                return
+            form_grupo(ventana, actualizar_grupos_equipos)
+
+        def abrir_form_equipo():
+            if len(get_grupo()) < 6:
+                messagebox.showwarning("Atención", "Debes registrar los 6 grupos antes de agregar equipos.")
+                return
+            if len(get_equipo()) >= 24:
+                messagebox.showinfo("Límite alcanzado", "Ya has registrado los 24 equipos permitidos.")
+                return
+            form_equipo(ventana, actualizar_grupos_equipos)
+
+        def abrir_form_partidos():
+            if len(get_equipo()) < 24:
+                messagebox.showwarning("Atención", "Debes cargar los 24 equipos antes de registrar los partidos.")
+                return
+            form_partidos(ventana)
+
+        def volver_menu_principal():
+            volver()
+
+        # --- Estilo de botones ---
+        boton_estilo = {
+            "font": ("Segoe UI", 12),
+            "bg": "#68ab98",
+            "fg": "white",
+            "activebackground": "#5a9686",
+            "activeforeground": "white",
+            "relief": "flat",
+            "width": 25,
+            "cursor": "hand2",
+            "bd": 0,
+            "pady": 6
+        }
+
+        # --- Botones ---
+
+        b_grupos = tk.Button(
+            frame_info,
+            text="Agregar Grupo",
+            command=abrir_form_grupo,
+            **boton_estilo
+        )
+        b_grupos.pack(anchor="center", pady=8)
+
+        b_equipos = tk.Button(
+            frame_info,
+            text="Agregar Equipo",
+            command=abrir_form_equipo,
+            **boton_estilo
+        )
+        b_equipos.pack(anchor="center", pady=8)
+
+        tk.Button(
+            frame_info,
+            text="Registrar Fechas de Partidos",
+            command=abrir_form_partidos,
+            **boton_estilo
+        ).pack(anchor="center", pady=8)
+
+        tk.Button(
+            frame_info,
+            text="Volver al Menú Principal",
+            command=volver_menu_principal,
+            **boton_estilo
+        ).pack(anchor="center", pady=8)
+        # Inicializa los estados visuales
+        actualizar_estados_botones()
+
+        # Frame Central: Equipos-Grupos
         frame_centro = tk.Frame(frame_main)
-        frame_centro.pack(side="left", padx=20)
+        frame_centro.pack(side="left", fill="both", expand=True, padx=(10,0))
+
+        # Subframe para el título
+        frame_titulo = tk.Frame(frame_centro)
+        frame_titulo.pack(anchor="w")
+
+        tk.Label(
+            frame_titulo,
+            text="Grupos y Equipos",
+            font=("Segoe UI", 16, "bold"),
+            fg="#333"
+        ).pack(pady=10)
+
+        # Subframe que contendrá los grupos dinámicos
+        frame_contenido = tk.Frame(frame_centro)
+        frame_contenido.pack(fill="both", expand=True)
 
         def mostrar_grupos_equipos():
-            for widget in frame_centro.winfo_children():
+            for widget in frame_contenido.winfo_children():
                 widget.destroy()
 
             grupos_actualizados = get_grupo()
@@ -132,60 +259,65 @@ def pantalla_configuracion(ventana, volver_menu):
 
             row, col = 0, 0
             for gid, equipos_del_grupo in grupos_dict.items():
-                frame_grupo = tk.LabelFrame(frame_centro, text=f"Grupo {gid}", padx=10, pady=5, font=("Arial", 11, "bold"))
+                frame_grupo = tk.LabelFrame(
+                    frame_contenido,
+                    text=f"Grupo {gid}",
+                    padx=10,
+                    pady=5,
+                    font=("Segoe UI", 11, "bold"),
+                    bg="#f2f2f2",
+                    fg="#333"
+                )
                 frame_grupo.grid(row=row, column=col, padx=10, pady=10, sticky="n")
 
                 if equipos_del_grupo:
-                    for i, eq in enumerate(equipos_del_grupo):
-                        tk.Label(frame_grupo, text=f"{eq[1]} ({eq[2]})", font=("Arial", 10)).grid(row=i, column=0, sticky="w", pady=2)
+                    # Encabezado tipo tabla
+                    encabezados = ["ID", "Abreviatura", "Nombre", "Confederación"]
+                    for j, encabezado in enumerate(encabezados):
+                        tk.Label(
+                            frame_grupo,
+                            text=encabezado,
+                            font=("Segoe UI", 10, "bold"),
+                            bg="#68ab98",
+                            fg="#222",
+                            relief="ridge",
+                            width=14,
+                            padx=3,
+                            pady=3
+                        ).grid(row=0, column=j, sticky="nsew", padx=1, pady=1)
+
+                    # Filas con datos
+                    for i, eq in enumerate(equipos_del_grupo, start=1):
+                        identificador, nombre, abrev, conf = eq[0], eq[1], eq[2], eq[3]
+
+                        celdas = [identificador, abrev, nombre, conf]
+                        for j, valor in enumerate(celdas):
+                            tk.Label(
+                                frame_grupo,
+                                text=valor,
+                                font=("Segoe UI", 10),
+                                bg="#ffffff",
+                                fg="#000",
+                                relief="ridge",
+                                width=[10,10,20,16][j],
+                                anchor=["center","center","w","center"][j]
+                            ).grid(row=i, column=j, sticky="nsew", padx=1, pady=1)
                 else:
-                    tk.Label(frame_grupo, text="(Sin equipos)", font=("Arial", 10, "italic")).pack()
+                    tk.Label(
+                        frame_grupo,
+                        text="(Sin equipos en este grupo)",
+                        font=("Segoe UI", 10, "italic"),
+                        bg="#f2f2f2",
+                        fg="#666"
+                    ).pack(pady=10)
 
                 col += 1
-                if col >= 3:
+                if col >= 2:
                     col = 0
                     row += 1
 
         mostrar_grupos_equipos()
 
-        def actualizar_grupos_equipos():
-            mostrar_grupos_equipos()
-            b_grupos.config(state="disabled" if len(get_grupo()) >= 6 else "normal")
-            b_equipos.config(state="disabled" if len(get_equipo()) >= 24 or len(get_grupo()) < 6 else "normal")
 
-        # --- Frame derecho (botones) ---
-        frame_buttons = tk.Frame(frame_main)
-        frame_buttons.pack(side="right", anchor="ne")
+        
 
-        tk.Button(
-            frame_buttons, text="Volver al menú principal",
-            font=("Arial", 12), bg="#2196F3", fg="white", command=volver
-        ).pack(anchor="e", pady=4)
-
-        b_grupos = tk.Button(
-            frame_buttons, text="Agregar Grupo",
-            font=("Arial", 12), bg="#4CAF50", fg="white",
-            command=lambda: form_grupo(ventana, actualizar_grupos_equipos)
-        )
-        b_grupos.pack(anchor="e", pady=4)
-        if len(get_grupo()) >= 6:
-            b_grupos.config(state="disabled")
-
-        b_equipos = tk.Button(
-            frame_buttons, text="Agregar Equipo",
-            font=("Arial", 12), bg="#FF9800", fg="white",
-            command=lambda: form_equipo(ventana, actualizar_grupos_equipos)
-        )
-        b_equipos.pack(anchor="e", pady=4)
-        if len(get_equipo()) >= 24 or len(get_grupo()) < 6:
-            b_equipos.config(state="disabled")
-
-        # ✅ Nuevo botón que abre el formulario modular de fechas
-        tk.Button(
-            frame_buttons,
-            text="Registrar Fechas de Partidos",
-            font=("Arial", 12),
-            bg="#9C27B0",
-            fg="white",
-            command=lambda: form_partidos(ventana)
-        ).pack(anchor="e", pady=4)

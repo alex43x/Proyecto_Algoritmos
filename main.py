@@ -1,13 +1,14 @@
 import tkinter as tk
 from views.menu_principal import menu_principal
 from controllers.pool import crear_tablas
-# --- MAIN ---
+
+
+# MAIN
 def main():
     ventana = tk.Tk()
-    ventana.title("Sistema de Gestión de Torneo de Fútbol")
-    ventana.geometry("650x350")
+    ventana.title("Sistema de Gestión Torneo")
+    ventana.state('zoomed')
     
-
     # Primer arranque: menú principal
     menu_principal(ventana)
     crear_tablas()
