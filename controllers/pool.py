@@ -1,13 +1,16 @@
 import sqlite3
 import os
 
+    # Obtiene la ruta base del archivo actual (carpeta del modulo)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    # Construye la ruta completa a la base de datos dentro de la carpeta "data"
 DB_PATH = os.path.join(BASE_DIR, "..", "data", "torneo.db")
 
 def conectar():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     return sqlite3.connect(DB_PATH)
 
+    # Crea todas las tablas necesarias para el sistema si aun no existen
 def crear_tablas():
     conn = conectar()
     cursor = conn.cursor()
@@ -55,6 +58,7 @@ def crear_tablas():
     """)
     conn.commit()
     conn.close()
+    # Inserta los partidos predefinidos de las 3 jornadas de la fase de grupos
 def crear_partidos_fase_grupos():
     conn = conectar()
     cursor = conn.cursor()

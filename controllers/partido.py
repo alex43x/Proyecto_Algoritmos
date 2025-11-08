@@ -82,7 +82,7 @@ def get_puntos_partido():
     conn.close()
     return partidos
 
-
+# LISTA CON TODOS LOS PARTIDOS Y SUS DATOS PRINCIPALES
 def get_partidos():
     """
     Devuelve una lista de tuplas (idPartido, equipo1, equipo2, jornada, fecha, hora)
@@ -107,7 +107,7 @@ def get_partidos():
     conn.close()
     return datos
 
-
+# ACTUALIZA FECHA Y HORA DE UN PARTIDO
 def update_partido_fecha(idPartido, fecha, hora):
     """
     Actualiza la fecha y hora (TEXT) de un partido específico.
