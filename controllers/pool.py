@@ -37,8 +37,8 @@ def crear_tablas():
         idPartido INTEGER PRIMARY KEY,
         fecha TEXT,
         hora TEXT,
-        identificadorEquipoUno INTEGER NOT NULL,
-        identificadorEquipoDos INTEGER NOT NULL,
+        identificadorEquipoUno TEXT,
+        identificadorEquipoDos TEXT,
         golesEquipoUno INTEGER NOT NULL,
         golesEquipoDos INTEGER NOT NULL,
         tarjetasAmarillasEquipoUno INTEGER NOT NULL,
@@ -128,7 +128,7 @@ def crear_partidos_fase_final():
     ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 5),
     --Semifinal/2 PARTIDOS/J6 
     ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 6),
-    ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 6);
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 6),
     --Final y 3er Puesto /2 PARTIDOS/J7
     ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 7),
     ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 7);
@@ -212,3 +212,154 @@ def actualizar_detalles_eliminatorias(jornada):
     conn.commit()
     conn.close()
     print(f"Detalles (goles, tarjetas, puntos) actualizados correctamente para la jornada {jornada}.")
+#para asignar cuartos, busca la jornada anterior, guarda, define, busca la actual, actualiza y no retorna nada ya qu esolo es para actualizar la platilla.
+def asignar_cuartos():
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT idPartido, identificadorEquipoUno, identificadorEquipoDos,
+               golesEquipoUno, golesEquipoDos
+        FROM partido
+        WHERE jornada = 4
+        ORDER BY idPartido ASC;
+    """)
+    partidos = cursor.fetchall()
+    ganadores = []
+    for id_partido, eq1, eq2, g1, g2 in partidos:
+        if g1 > g2:
+            ganadores.append(eq1)
+        else:
+            ganadores.append(eq2)
+    enfrentamientos = []
+    for j in range(0, len(ganadores), 2):
+        equipo_uno = ganadores[j]
+        equipo_dos = ganadores[j + 1]
+        enfrentamientos.append((equipo_uno, equipo_dos))
+    cursor.execute("""
+        SELECT idPartido
+        FROM partido
+        WHERE jornada = 5
+        ORDER BY idPartido ASC;
+    """)
+    partidos_cuartos = cursor.fetchall()
+    k = 0
+    for fila in partidos_cuartos:
+        id_partido = fila[0]
+        equipo_uno = enfrentamientos[k][0]
+        equipo_dos = enfrentamientos[k][1]
+
+        cursor.execute("""
+            UPDATE partido
+            SET identificadorEquipoUno = ?, identificadorEquipoDos = ?
+            WHERE idPartido = ?;
+        """, (equipo_uno, equipo_dos, id_partido))
+
+        k += 1
+    conn.commit()
+    conn.close()
+    print("Enfrentamientos de los Cuartos de Final asignados correctamente.")
+    
+#asignar semifinales , misma logica que los de cuartos 
+def asignar_semifinales():
+    conn = conectar()
+    cursor = conn.cursor()
+    # Obtener los ganadores de los cuartos (jornada 5)
+    cursor.execute("""
+        SELECT identificadorEquipoUno, identificadorEquipoDos,
+               golesEquipoUno, golesEquipoDos
+        FROM partido
+        WHERE jornada = 5
+        ORDER BY idPartido ASC;
+    """)
+    partidos_cuartos = cursor.fetchall()
+    ganadores = []
+    for fila in partidos_cuartos:
+        equipo_uno = fila[0]
+        equipo_dos = fila[1]
+        goles_uno = fila[2]
+        goles_dos = fila[3]
+
+        if goles_uno > goles_dos:
+            ganadores.append(equipo_uno)
+        else:
+            ganadores.append(equipo_dos)
+    # Crear los enfrentamientos (1 vs 2, 3 vs 4)
+    enfrentamientos = []
+    i = 0
+    while i < len(ganadores):
+        equipo_uno = ganadores[i]
+        equipo_dos = ganadores[i + 1]
+        enfrentamientos.append((equipo_uno, equipo_dos))
+        i = i + 2
+    # Asignar los equipos ganadores a los partidos de semifinales (jornada 6)
+    cursor.execute("""
+        SELECT idPartido
+        FROM partido
+        WHERE jornada = 6
+        ORDER BY idPartido ASC;
+    """)
+    partidos_semifinal = cursor.fetchall()
+    for f in range(len(partidos_semifinal)):
+        id_partido = partidos_semifinal[f][0]
+        equipo_uno = enfrentamientos[f][0]
+        equipo_dos = enfrentamientos[f][1]
+
+        cursor.execute("""
+            UPDATE partido
+            SET identificadorEquipoUno = ?, identificadorEquipoDos = ?
+            WHERE idPartido = ?;
+        """, (equipo_uno, equipo_dos, id_partido))
+    conn.commit()
+    conn.close()
+    print("Equipos de semifinales asignados correctamente en la jornada 6.")
+#para asignar las finales, misma logica que las anteriores, solo con la diferencia que guarda los persdedores para el tercer puesto.
+def asignar_finales():
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT identificadorEquipoUno, identificadorEquipoDos,
+               golesEquipoUno, golesEquipoDos
+        FROM partido
+        WHERE jornada = 6
+        ORDER BY idPartido ASC;
+    """)
+    partidos_semis = cursor.fetchall()
+    ganadores = []
+    perdedores = []
+    for fila in partidos_semis:
+        equipo_uno = fila[0]
+        equipo_dos = fila[1]
+        goles_uno = fila[2]
+        goles_dos = fila[3]
+
+        if goles_uno > goles_dos:
+            ganadores.append(equipo_uno)
+            perdedores.append(equipo_dos)
+        else:
+            ganadores.append(equipo_dos)
+            perdedores.append(equipo_uno)
+    enfrentamientos = [
+        (ganadores[0], ganadores[1]),   # Final
+        (perdedores[0], perdedores[1])  # 3er puesto
+    ]
+    cursor.execute("""
+        SELECT idPartido
+        FROM partido
+        WHERE jornada = 7
+        ORDER BY idPartido ASC;
+    """)
+    partidos_final = cursor.fetchall()
+
+    for f in range(len(partidos_final)):
+        id_partido = partidos_final[f][0]
+        equipo_uno = enfrentamientos[f][0]
+        equipo_dos = enfrentamientos[f][1]
+        cursor.execute("""
+            UPDATE partido
+            SET identificadorEquipoUno = ?, identificadorEquipoDos = ?
+            WHERE idPartido = ?;
+        """, (equipo_uno, equipo_dos, id_partido))
+    conn.commit()
+    conn.close()
+    print("Equipos de la final y 3er puesto asignados correctamente en la jornada 7.")
+#OJO todo esto pensado que para definir 4tos ya esta totalmente cargado la platilla de 8vos, 4tos para semis y semis para final.
