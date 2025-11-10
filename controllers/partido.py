@@ -31,11 +31,6 @@ def insert_partido(datos):
 
 # ACTUALIZAR PARTIDO COMPLETO (GOLES, TARJETAS, PUNTOS)
 def update_partido(datos):
-    """
-    Actualiza los datos de un partido existente (goles, tarjetas, puntos).
-    datos debe ser una tupla con este orden:
-    (goles1, goles2, amarillas1, amarillas2, rojas1, rojas2, puntos1, puntos2, idPartido)
-    """
     conn = conectar()
     cursor = conn.cursor()
     cursor.execute("""
@@ -46,14 +41,10 @@ def update_partido(datos):
             tarjetasAmarillasEquipoDos = ?,
             tarjetasRojasEquipoUno = ?,
             tarjetasRojasEquipoDos = ?,
-            puntosEquipoUno = ?,
-            puntosEquipoDos = ?
         WHERE idPartido = ?
     """, datos)
     conn.commit()
     conn.close()
-
-
 # OBTENER PARTIDOS SIN JUGAR
 def get_partido_sin_jugar():
     """Devuelve los partidos (id, fecha, equipos) que aún no se han jugado."""
@@ -68,8 +59,7 @@ def get_partido_sin_jugar():
     conn.close()
     return partidos
 
-
-# OBTENER PUNTOS DE PARTIDOS
+#MODIFICAR 
 def get_puntos_partido():
     """Devuelve los puntos asignados por partido."""
     conn = conectar()
