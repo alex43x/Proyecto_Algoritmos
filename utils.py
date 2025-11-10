@@ -1,4 +1,5 @@
 from controllers.pool import conectar
+import datetime
 def tabla_posiciones_general():
     conn = conectar()
     cursor = conn.cursor()
@@ -210,3 +211,38 @@ def definir_enfrentamientos_octavos(equipos_clasificados):
         if id2 != "":
             resultado.append((id_partido, id1, pais1, id2, pais2))
     return resultado
+#funcion para evaluar si la jornada esta totalmente cargada
+#para ver hasta que jornada se completo
+#devuelve 0 si la jornada 1 no se cargo por completo, luego entrega el ultimo cargado
+#por j1 completa y j2 no, devuelve j1 
+def ultima_fecha_jornada():
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT jornada, fecha
+        FROM partido
+        ORDER BY jornada ASC;
+    """)
+    registros = cursor.fetchall()
+    conn.close()
+    if len(registros) == 0:
+        return 0
+    ultima_completa = 0
+    jornada_actual = 1
+    while jornada_actual <= 7:
+        todos_con_fecha = True
+        # Revisar partidos de esta jornada
+        for fila in registros:
+            jornada_fila = fila[0]
+            fecha_fila = fila[1]
+            if jornada_fila == jornada_actual:
+                if fecha_fila == "" or fecha_fila is None:
+                    todos_con_fecha = False
+                    break
+        if todos_con_fecha:
+            ultima_completa = jornada_actual
+        else:
+            break
+        jornada_actual = jornada_actual + 1
+    return ultima_completa
