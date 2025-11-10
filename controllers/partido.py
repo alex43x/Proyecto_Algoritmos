@@ -2,16 +2,6 @@ from .pool import conectar
 
 # INSERTAR NUEVO PARTIDO
 def insert_partido(datos):
-    """
-    Inserta un nuevo partido en la base de datos.
-    datos debe ser una tupla con este orden:
-    (fecha, hora, idEquipo1, idEquipo2,
-     goles1, goles2,
-     amarillas1, amarillas2,
-     rojas1, rojas2,
-     puntos1, puntos2,
-     jornada)
-    """
     conn = conectar()
     cursor = conn.cursor()
     cursor.execute("""
@@ -20,15 +10,12 @@ def insert_partido(datos):
             identificadorEquipoUno, identificadorEquipoDos,
             golesEquipoUno, golesEquipoDos,
             tarjetasAmarillasEquipoUno, tarjetasAmarillasEquipoDos,
-            tarjetasRojasEquipoUno, tarjetasRojasEquipoDos,
-            puntosEquipoUno, puntosEquipoDos, jornada
+            tarjetasRojasEquipoUno, tarjetasRojasEquipoDos, jornada
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, datos)
     conn.commit()
     conn.close()
-
-
 # ACTUALIZAR PARTIDO COMPLETO (GOLES, TARJETAS, PUNTOS)
 def update_partido(datos):
     conn = conectar()
