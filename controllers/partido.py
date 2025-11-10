@@ -87,25 +87,27 @@ def get_partidos():
     """
     Devuelve una lista de tuplas (idPartido, equipo1, equipo2, jornada, fecha, hora)
     desde la tabla 'partido', uniendo con 'equipos' para mostrar los nombres.
+    Si aún no hay equipos asignados, muestra 'Sin asignar'.
     """
     conn = conectar()
     cursor = conn.cursor()
     cursor.execute("""
         SELECT 
             p.idPartido,
-            e1.pais AS equipo1,
-            e2.pais AS equipo2,
+            COALESCE(e1.pais, 'Sin asignar') AS equipo1,
+            COALESCE(e2.pais, 'Sin asignar') AS equipo2,
             p.jornada,
             COALESCE(p.fecha, '') AS fecha,
             COALESCE(p.hora, '') AS hora
         FROM partido p
-        JOIN equipos e1 ON p.identificadorEquipoUno = e1.identificador
-        JOIN equipos e2 ON p.identificadorEquipoDos = e2.identificador
+        LEFT JOIN equipos e1 ON p.identificadorEquipoUno = e1.identificador
+        LEFT JOIN equipos e2 ON p.identificadorEquipoDos = e2.identificador
         ORDER BY p.jornada, p.idPartido
     """)
     datos = cursor.fetchall()
     conn.close()
     return datos
+
 
 # ACTUALIZA FECHA Y HORA DE UN PARTIDO
 def update_partido_fecha(idPartido, fecha, hora):
