@@ -218,7 +218,6 @@ def definir_enfrentamientos_octavos(equipos_clasificados):
 def ultima_fecha_jornada():
     conn = conectar()
     cursor = conn.cursor()
-
     cursor.execute("""
         SELECT jornada, fecha
         FROM partido
@@ -246,3 +245,29 @@ def ultima_fecha_jornada():
             break
         jornada_actual = jornada_actual + 1
     return ultima_completa
+def carga_completa_fechas():
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT fecha, hora
+        FROM partido
+        ORDER BY jornada, idPartido;
+    """)
+    registros = cursor.fetchall()
+    conn.close()
+    for fila in registros:
+        fecha = fila[0]
+        hora  = fila[1]
+        datos_validos = True
+        if fecha is None:
+            datos_validos = False
+        elif fecha == "":
+            datos_validos = False
+
+        if hora is None:
+            datos_validos = False
+        elif hora == "":
+            datos_validos = False
+        if datos_validos == False:
+            return False
+    return True
