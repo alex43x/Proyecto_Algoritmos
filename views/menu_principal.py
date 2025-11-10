@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from views.menu_torneo import pantalla_configuracion
+from views.menu_resultados import pantalla_resultados
 
 
 def menu_principal(ventana):
@@ -37,12 +38,12 @@ def menu_principal(ventana):
     # funciones de los botones
     def abrir_configuracion():
         pantalla_configuracion(ventana, volver_al_menu)
+        
+    def abrir_registro_resultados():
+        pantalla_resultados(ventana, volver_al_menu)
 
     def volver_al_menu(v):
         menu_principal(v)
-
-    def abrir_registro_resultados():
-        messagebox.showinfo("Registro de resultados", "Módulo de registro de resultados en desarrollo.")
 
     def abrir_emision_informes():
         messagebox.showinfo("Emisión de informes", "Módulo de emisión de informes en desarrollo.")
