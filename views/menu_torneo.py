@@ -10,7 +10,6 @@ from views.form_equipo import form_equipo
 from views.form_partidos import form_partidos   
 from models.torneo import Torneo
 
-
 def pantalla_configuracion(ventana, volver_menu):
     for widget in ventana.winfo_children():
         widget.destroy()
@@ -58,42 +57,104 @@ def pantalla_configuracion(ventana, volver_menu):
         messagebox.showinfo("Éxito", "Torneo registrado correctamente")
         volver_menu(ventana)
 
+    def volver_menu_principal():
+            volver()
+            
+    # --- Estilo de botones ---
+    boton_estilo = {
+        "font": ("Segoe UI", 12),
+        "bg": "#68ab98",
+        "fg": "white",
+        "activebackground": "#5a9686",
+        "activeforeground": "white",
+        "relief": "flat",
+        "width": 25,
+        "cursor": "hand2",
+        "bd": 0,
+        "pady": 6
+    }
+    
     tk.Label(ventana, text="Configuración General", font=("Segoe UI", 24,"bold")).pack(pady=(30,0))
 
     # Si no hay torneo registrado
     if len(data) == 0:
-        frame_inputs = tk.Frame(ventana)
-        frame_inputs.pack(pady=10)
+        meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+          "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+        anios = ["2025", "2026", "2027", "2028"]
 
-        tk.Label(frame_inputs, text="Nombre:", font=("Segoe UI", 12)).grid(row=0, column=0, sticky="w", pady=5, padx=(0, 3))
-        lnombre = tk.Entry(frame_inputs, width=25, font=("Segoe UI", 12))
-        lnombre.grid(row=0, column=1, sticky="w")
+        # --- Frame principal tipo tarjeta ---
+        frame_inputs = tk.Frame(
+            ventana,
+            bg="white",
+            bd=2,
+            relief="groove",
+            padx=20,
+            pady=20
+        )
+        frame_inputs.pack(pady=30, padx=40)
 
-        tk.Label(frame_inputs, text="Sede:", font=("Segoe UI", 12)).grid(row=1, column=0, sticky="w", pady=5)
-        lsede = tk.Entry(frame_inputs, width=20, font=("Segoe UI", 12))
-        lsede.grid(row=1, column=1, sticky="w")
+        # --- Título ---
+        tk.Label(
+            frame_inputs,
+            text="🏆 Registro del Torneo",
+            font=("Segoe UI", 16, "bold"),
+            fg="#333",
+            bg="white"
+        ).grid(row=0, column=0, columnspan=3, pady=(0, 20))
 
-        tk.Label(frame_inputs, text="Fecha de Inicio:", font=("Segoe UI", 12)).grid(row=2, column=0, sticky="w", pady=5)
-        e_dia_inicio = tk.Entry(frame_inputs, width=8, font=("Segoe UI", 12))
-        e_dia_inicio.grid(row=2, column=1, sticky="w")
+        # --- Nombre ---
+        tk.Label(frame_inputs, text="Nombre del Torneo:", font=("Segoe UI", 12, "bold"), bg="white").grid(row=1, column=0, sticky="e", pady=6, padx=5)
+        lnombre = tk.Entry(frame_inputs, width=30, font=("Segoe UI", 12), relief="solid", bd=1)
+        lnombre.grid(row=1, column=1, columnspan=2, sticky="w", pady=6, padx=5)
+
+        # --- Sede ---
+        tk.Label(frame_inputs, text="Sede:", font=("Segoe UI", 12, "bold"), bg="white").grid(row=2, column=0, sticky="e", pady=6, padx=5)
+        lsede = tk.Entry(frame_inputs, width=25, font=("Segoe UI", 12), relief="solid", bd=1)
+        lsede.grid(row=2, column=1, columnspan=2, sticky="w", pady=6, padx=5)
+
+        # --- Fecha de inicio ---
+        tk.Label(frame_inputs, text="Fecha de Inicio:", font=("Segoe UI", 12, "bold"), bg="white").grid(row=3, column=0, sticky="e", pady=6, padx=5)
+        e_dia_inicio = tk.Entry(frame_inputs, width=6, font=("Segoe UI", 12), relief="solid", bd=1)
+        e_dia_inicio.grid(row=3, column=1, sticky="w", pady=6, padx=(0, 5))
+
         var_mes_inicio = tk.StringVar(value=meses[0])
-        tk.OptionMenu(frame_inputs, var_mes_inicio, *meses).grid(row=2, column=1, sticky="e")
+        ttk.OptionMenu(frame_inputs, var_mes_inicio, meses[0], *meses).grid(row=3, column=1, sticky="e", padx=(0,20))
+
         var_anio_inicio = tk.StringVar(value=anios[0])
-        tk.OptionMenu(frame_inputs, var_anio_inicio, *anios).grid(row=2, column=2)
+        ttk.OptionMenu(frame_inputs, var_anio_inicio, anios[0], *anios).grid(row=3, column=2, sticky="w")
+        # --- Fecha de cierre ---
+        tk.Label(frame_inputs, text="Fecha de Cierre:", font=("Segoe UI", 12, "bold"), bg="white").grid(row=4, column=0, sticky="e", pady=6, padx=5)
+        e_dia_fin = tk.Entry(frame_inputs, width=6, font=("Segoe UI", 12), relief="solid", bd=1)
+        e_dia_fin.grid(row=4, column=1, sticky="w", pady=6, padx=(0, 5))
 
-        tk.Label(frame_inputs, text="Fecha de Cierre:", font=("Segoe UI", 12)).grid(row=3, column=0, sticky="w", pady=5)
-        e_dia_fin = tk.Entry(frame_inputs, width=8, font=("Segoe UI", 12))
-        e_dia_fin.grid(row=3, column=1, sticky="w")
         var_mes_fin = tk.StringVar(value=meses[0])
-        tk.OptionMenu(frame_inputs, var_mes_fin, *meses).grid(row=3, column=1, sticky="e")
-        var_anio_fin = tk.StringVar(value=anios[0])
-        tk.OptionMenu(frame_inputs, var_anio_fin, *anios).grid(row=3, column=2)
+        ttk.OptionMenu(frame_inputs, var_mes_fin, meses[0],*meses).grid(row=4, column=1, sticky="e", padx=(0, 20))
 
+        var_anio_fin = tk.StringVar(value=anios[0])
+        ttk.OptionMenu(frame_inputs, var_anio_fin, anios[0],*anios).grid(row=4, column=2, sticky="w")
+
+        # --- Línea separadora ---
+        tk.Frame(frame_inputs, height=2, bg="#68ab98").grid(row=5, column=0, columnspan=3, pady=15, sticky="ew")
+
+        # --- Botón Guardar ---
         tk.Button(
-            ventana, text="Guardar datos del torneo",
-            font=("Segoe UI", 12), bg="#4CAF50", fg="white",
+            ventana,
+            text="Guardar Datos del Torneo",
+            font=("Segoe UI", 13, "bold"),
+            bg="#68ab98",
+            fg="white",
+            relief="flat",
+            width=30,
+            pady=8,
             command=guardar_torneo
-        ).pack(pady=4)
+        ).pack(pady=10)
+        
+        tk.Button(
+            ventana,
+            text="Volver al Menú Principal",
+            command=volver_menu_principal,
+            **boton_estilo
+        ).pack(anchor="center", pady=8)
 
     else:
         torneo = data[0]
@@ -124,18 +185,6 @@ def pantalla_configuracion(ventana, volver_menu):
         tk.Frame(frame_info, height=2, bg="#68ab98").pack(fill="x", pady=15)
 
         # --- Funciones internas ---
-        def actualizar_grupos_equipos():
-            mostrar_grupos_equipos()
-            if len(get_grupo()) >= 6:
-                b_grupos.config(state="disabled")
-            else:
-                b_grupos.config(state="normal")
-
-            if len(get_equipo()) >= 24 or len(get_grupo()) < 6:
-                b_equipos.config(state="disabled")
-            else:
-                b_equipos.config(state="normal")
-
         def actualizar_estados_botones():
             # Cambia color o texto según estado
             if len(get_grupo()) >= 6:
@@ -150,6 +199,19 @@ def pantalla_configuracion(ventana, volver_menu):
             else:
                 b_equipos.config(bg="#68ab98", fg="white", text="Agregar Equipo")
 
+        def actualizar_grupos_equipos():
+            mostrar_grupos_equipos()
+            actualizar_estados_botones()
+            if len(get_grupo()) >= 6:
+                b_grupos.config(state="disabled")
+            else:
+                b_grupos.config(state="normal")
+
+            if len(get_equipo()) >= 24 or len(get_grupo()) < 6:
+                b_equipos.config(state="disabled")
+            else:
+                b_equipos.config(state="normal")
+                
         def abrir_form_grupo():
             if len(get_grupo()) >= 6:
                 messagebox.showinfo("Límite alcanzado", "Ya has registrado los 6 grupos permitidos.")
@@ -170,23 +232,6 @@ def pantalla_configuracion(ventana, volver_menu):
                 messagebox.showwarning("Atención", "Debes cargar los 24 equipos antes de registrar los partidos.")
                 return
             form_partidos(ventana)
-
-        def volver_menu_principal():
-            volver()
-
-        # --- Estilo de botones ---
-        boton_estilo = {
-            "font": ("Segoe UI", 12),
-            "bg": "#68ab98",
-            "fg": "white",
-            "activebackground": "#5a9686",
-            "activeforeground": "white",
-            "relief": "flat",
-            "width": 25,
-            "cursor": "hand2",
-            "bd": 0,
-            "pady": 6
-        }
 
         # --- Botones ---
 
@@ -315,9 +360,4 @@ def pantalla_configuracion(ventana, volver_menu):
                 if col >= 2:
                     col = 0
                     row += 1
-
         mostrar_grupos_equipos()
-
-
-        
-
