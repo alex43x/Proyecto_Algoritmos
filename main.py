@@ -14,9 +14,6 @@ def main():
     # Primer arranque: menú principal
     menu_principal(ventana)
     crear_tablas()
-    if len(get_equipo())==24 and len(get_partidos())==0:
-        crear_partidos_fase_grupos()
-        crear_partidos_fase_final()
     ventana.mainloop()
  
 

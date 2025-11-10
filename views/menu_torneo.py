@@ -1,6 +1,7 @@
 from tkinter import ttk, messagebox
 import tkinter as tk
 import datetime
+from controllers.pool import crear_partidos_fase_grupos,crear_partidos_fase_final
 from controllers.partido import get_partidos
 from controllers.torneo import get_torneos
 from controllers.grupos import get_grupo
@@ -202,6 +203,9 @@ def pantalla_configuracion(ventana, volver_menu):
         def actualizar_grupos_equipos():
             mostrar_grupos_equipos()
             actualizar_estados_botones()
+            if len(get_equipo())==24 and len(get_partidos())==0:
+                crear_partidos_fase_grupos()
+                crear_partidos_fase_final()
             if len(get_grupo()) >= 6:
                 b_grupos.config(state="disabled")
             else:
