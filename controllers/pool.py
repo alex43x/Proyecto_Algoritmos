@@ -134,9 +134,10 @@ def crear_partidos_fase_final():
     --Semifinal/2 PARTIDOS/J6 
     ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 6),
     ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 6),
-    --Final y 3er Puesto /2 PARTIDOS/J7
+    --3er Puesto /1 PARTIDO/J7
     ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 7),
-    ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 7);
+    --Final /1 PARTIDO/J8
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 0, 0, 8);
     """)
     conn.commit()
     conn.close()
