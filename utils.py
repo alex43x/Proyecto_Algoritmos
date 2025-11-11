@@ -3,122 +3,138 @@ import datetime
 def tabla_posiciones_general():
     conn = conectar()
     cursor = conn.cursor()
-
+    # 1. Cargar todos los equipos: (id, pais, grupo)
     cursor.execute("""
-        SELECT 
-            e.identificador,
-            e.pais,
-            e.idGrupo,
-            COALESCE(SUM(
-                CASE WHEN p.identificadorEquipoUno = e.identificador THEN p.puntosEquipoUno ELSE 0 END
-            ), 0)
-            +
-            COALESCE(SUM(
-                CASE WHEN p.identificadorEquipoDos = e.identificador THEN p.puntosEquipoDos ELSE 0 END
-            ), 0)
-            AS puntos_totales,
-            COALESCE(SUM(
-                CASE WHEN p.identificadorEquipoUno = e.identificador THEN p.golesEquipoUno - p.golesEquipoDos
-                     WHEN p.identificadorEquipoDos = e.identificador THEN p.golesEquipoDos - p.golesEquipoUno
-                     ELSE 0 END
-            ), 0) AS diferencia_goles,
-            COALESCE(SUM(
-                CASE WHEN p.identificadorEquipoUno = e.identificador THEN p.golesEquipoUno
-                     WHEN p.identificadorEquipoDos = e.identificador THEN p.golesEquipoDos
-                     ELSE 0 END
-            ), 0) AS goles_favor,
-            COALESCE(SUM(
-                CASE WHEN p.identificadorEquipoUno = e.identificador THEN p.tarjetasAmarillasEquipoUno
-                     WHEN p.identificadorEquipoDos = e.identificador THEN p.tarjetasAmarillasEquipoDos
-                     ELSE 0 END
-            ), 0) AS amarillas,
-            COALESCE(SUM(
-                CASE WHEN p.identificadorEquipoUno = e.identificador THEN p.tarjetasRojasEquipoUno
-                     WHEN p.identificadorEquipoDos = e.identificador THEN p.tarjetasRojasEquipoDos
-                     ELSE 0 END
-            ), 0) AS rojas
-        FROM equipos e
-        LEFT JOIN partido p
-        ON e.identificador = p.identificadorEquipoUno
-        OR e.identificador = p.identificadorEquipoDos
-        WHERE p.jornada IN (1, 2, 3)
-        GROUP BY e.identificador, e.pais, e.idGrupo
-        ORDER BY e.idGrupo, puntos_totales DESC;
+        SELECT identificador, pais, grupo
+        FROM equipos
+        ORDER BY grupo, identificador;
     """)
+    equipos = cursor.fetchall()
+    # tabla[fila] = [id, pais, grupo, pts, dg, gf, gc, amarillas, rojas]
+    tabla = []
+    for e in equipos:
+        tabla.append([e[0], e[1], e[2], 0, 0, 0, 0, 0, 0])
 
-    tabla = cursor.fetchall()
+    # 2. Cargar todos los partidos de fase de grupos
+    cursor.execute("""
+        SELECT identificadorEquipoUno, identificadorEquipoDos,
+               golesEquipoUno, golesEquipoDos,
+               tarjetasAmarillasEquipoUno, tarjetasAmarillasEquipoDos,
+               tarjetasRojasEquipoUno, tarjetasRojasEquipoDos
+        FROM partido
+        WHERE jornada IN (1, 2, 3);
+    """)
+    partidos = cursor.fetchall()
     conn.close()
+    for p in partidos:
+        id_1 = p[0]
+        id_2 = p[1]
 
-    tabla = list(tabla)
+        goles_1 = p[2]
+        goles_2 = p[3]
 
-    # Aplicar desempates dentro de cada grupo
-    for i in range(len(tabla) - 1):
-        eq1 = tabla[i]
-        eq2 = tabla[i + 1]
+        amar_1 = p[4]
+        amar_2 = p[5]
 
-        if eq1[2] == eq2[2] and eq1[3] == eq2[3]:
-            conn = conectar()
-            cursor= conn.cursor()
-            cursor.execute("""
-                SELECT 
-                    SUM(CASE WHEN identificadorEquipoUno = ? THEN puntosEquipoUno 
-                             WHEN identificadorEquipoDos = ? THEN puntosEquipoDos ELSE 0 END),
-                    SUM(CASE WHEN identificadorEquipoUno = ? THEN golesEquipoUno - golesEquipoDos
-                             WHEN identificadorEquipoDos = ? THEN golesEquipoDos - golesEquipoUno ELSE 0 END),
-                    SUM(CASE WHEN identificadorEquipoUno = ? THEN golesEquipoUno
-                             WHEN identificadorEquipoDos = ? THEN golesEquipoDos ELSE 0 END)
-                FROM partido
-                WHERE ((identificadorEquipoUno = ? AND identificadorEquipoDos = ?)
-                   OR (identificadorEquipoUno = ? AND identificadorEquipoDos = ?))
-                  AND jornada IN (1, 2, 3);
-            """, (
-                eq1[0], eq1[0],
-                eq1[0], eq1[0],
-                eq1[0], eq1[0],
-                eq1[0], eq2[0],
-                eq2[0], eq1[0]
-            ))
-
-            enfrentamiento = c.fetchone()
-            conn.close()
-
-            c1 = enfrentamiento[0] or 0
-            c2 = enfrentamiento[1] or 0
-            c3 = enfrentamiento[2] or 0
-
-            # Diferencias generales
-            c4 = eq1[3] - eq2[3]
-            c5 = eq1[4] - eq2[4]
-            c6 = eq1[5] - eq2[5]
-            c7 = eq2[6] - eq1[6]
-            c8 = eq2[7] - eq1[7]
-
-            criterios = [c1, c2, c3, c4, c5, c6, c7, c8]
-            for c in criterios:
-                if c > 0:
-                    break
-                elif c < 0:
-                    tabla[i], tabla[i + 1] = tabla[i + 1], tabla[i]
-                    break
-    # Agrupar equipos por grupo
-    grupos = {}
+        roja_1 = p[6]
+        roja_2 = p[7]
+        # Buscar índices en tabla
+        i1 = -1
+        i2 = -1
+        for k in range(len(tabla)):
+            if tabla[k][0] == id_1:
+                i1 = k
+            if tabla[k][0] == id_2:
+                i2 = k
+        # Goles a favor y en contra
+        tabla[i1][5] += goles_1   # GF
+        tabla[i1][6] += goles_2   # GC
+        tabla[i2][5] += goles_2
+        tabla[i2][6] += goles_1
+        # Diferencia de goles
+        tabla[i1][4] = tabla[i1][5] - tabla[i1][6]
+        tabla[i2][4] = tabla[i2][5] - tabla[i2][6]
+        # Tarjetas
+        tabla[i1][7] += amar_1
+        tabla[i1][8] += roja_1
+        tabla[i2][7] += amar_2
+        tabla[i2][8] += roja_2
+        # Puntos acumulados (regla 3-1-0)
+        if goles_1 > goles_2:
+            tabla[i1][3] += 3
+        elif goles_2 > goles_1:
+            tabla[i2][3] += 3
+        else:
+            tabla[i1][3] += 1
+            tabla[i2][3] += 1
+    # 4. ORDENAR POR GRUPO (bubble limpio por cada grupo)
+    # Obtener lista de grupos únicos
+    grupos = []
     for fila in tabla:
-        idGrupo = fila[2]
-        if idGrupo not in grupos:
-            grupos[idGrupo] = []
-        grupos[idGrupo].append(fila)
+        g = fila[2]
+        if g not in grupos:
+            grupos.append(g)
+    tabla_final = []
 
+    # Ordenar cada grupo por separado
+    for g in grupos:
+        # Extraer equipos del grupo g
+        sub = []
+        for fila in tabla:
+            if fila[2] == g:
+                sub.append(fila)
+
+        # Bubble sort por puntos, DG y GF
+        m = len(sub)
+        for a in range(m - 1):
+            for b in range(m - 1 - a):
+
+                cambiar = False
+
+                # 1. Puntos
+                if sub[b][3] < sub[b+1][3]:
+                    cambiar = True
+
+                elif sub[b][3] == sub[b+1][3]:
+
+                    # 2. DG
+                    if sub[b][4] < sub[b+1][4]:
+                        cambiar = True
+
+                    elif sub[b][4] == sub[b+1][4]:
+
+                        # 3. GF
+                        if sub[b][5] < sub[b+1][5]:
+                            cambiar = True
+
+                if cambiar:
+                    sub[b], sub[b+1] = sub[b+1], sub[b]
+
+        # Añadir grupo ordenado
+        for fila in sub:
+            tabla_final.append(fila)
+    tabla = tabla_final
     print("\nTABLA DE POSICIONES POR GRUPO (Jornadas 1-3)")
-    print("-" * 45)
-    for idGrupo in grupos: 
-        print(f"\nGRUPO {idGrupo}")
-        print(f"{'Identificador':<15}{'Pais':<15}{'Pts':<10}")
-        print("-" * 40)
-        for fila in grupos[idGrupo]:
-            print(f"{fila[0]:<15}{fila[1]:<15}{fila[3]:<10}")
-
-    tabla_final = [(fila[0], fila[1], fila[3]) for fila in tabla]
-    return tabla_final
+    print("------------------------------------------------")
+    grupo_actual = None
+    for fila in tabla:
+        id_eq  = fila[0]
+        pais   = fila[1]
+        grupo  = fila[2]
+        pts    = fila[3]
+        dg     = fila[4]
+        gf     = fila[5]
+        gc     = fila[6]
+        if grupo != grupo_actual:
+            grupo_actual = grupo
+            print(f"\nGRUPO {grupo_actual}")
+            print(f"{'ID':<10}{'Pais':<15}{'Pts':<6}{'DG':<6}{'GF':<6}{'GC':<6}")
+            print("----------------------------------------")
+        print(f"{id_eq:<10}{pais:<15}{pts:<6}{dg:<6}{gf:<6}{gc:<6}")
+    salida = []
+    for fila in tabla:
+        salida.append((fila[0], fila[1], fila[3]))
+    return salida
 def clasificados_eliminatoria(tabla_pos):
     def ordenar_terceros(lista):
         #me fui a la segura con bubble
