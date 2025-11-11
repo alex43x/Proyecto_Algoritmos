@@ -20,7 +20,8 @@ def crear_tablas():
         nombreTorneo TEXT NOT NULL UNIQUE,
         sede TEXT NOT NULL UNIQUE,
         fechaDeInicio TEXT NOT NULL UNIQUE,
-        fechaDeFin TEXT NOT NULL UNIQUE
+        fechaDeFin TEXT NOT NULL UNIQUE,
+        jornada INTEGER NOT NULL DEFAULT 1
     );
 
     CREATE TABLE IF NOT EXISTS grupos(

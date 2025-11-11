@@ -16,7 +16,7 @@ def insert_partido(datos):
     """, datos)
     conn.commit()
     conn.close()
-# ACTUALIZAR PARTIDO COMPLETO (GOLES, TARJETAS, PUNTOS)
+# ACTUALIZAR PARTIDO COMPLETO (GOLES, TARJETAS)
 def update_partido(datos):
     conn = conectar()
     cursor = conn.cursor()
@@ -27,7 +27,7 @@ def update_partido(datos):
             tarjetasAmarillasEquipoUno = ?,
             tarjetasAmarillasEquipoDos = ?,
             tarjetasRojasEquipoUno = ?,
-            tarjetasRojasEquipoDos = ?,
+            tarjetasRojasEquipoDos = ?
         WHERE idPartido = ?
     """, datos)
     conn.commit()
@@ -62,8 +62,8 @@ def get_puntos_partido():
 # LISTA CON TODOS LOS PARTIDOS Y SUS DATOS PRINCIPALES
 def get_partidos():
     """
-    Devuelve una lista de tuplas (idPartido, equipo1, equipo2, jornada, fecha, hora)
-    desde la tabla 'partido', uniendo con 'equipos' para mostrar los nombres.
+    Devuelve una lista de tuplas con todos los campos de la tabla 'partido',
+    uniendo con 'equipos' para mostrar los nombres de los equipos.
     Si aún no hay equipos asignados, muestra 'Sin asignar'.
     """
     conn = conectar()
@@ -71,11 +71,19 @@ def get_partidos():
     cursor.execute("""
         SELECT 
             p.idPartido,
-            COALESCE(e1.pais, 'Sin asignar') AS equipo1,
-            COALESCE(e2.pais, 'Sin asignar') AS equipo2,
-            p.jornada,
             COALESCE(p.fecha, '') AS fecha,
-            COALESCE(p.hora, '') AS hora
+            COALESCE(p.hora, '') AS hora,
+            COALESCE(e1.pais, 'Sin asignar') AS equipo1_nombre,
+            COALESCE(e2.pais, 'Sin asignar') AS equipo2_nombre,
+            p.identificadorEquipoUno,
+            p.identificadorEquipoDos,
+            p.golesEquipoUno,
+            p.golesEquipoDos,
+            p.tarjetasAmarillasEquipoUno,
+            p.tarjetasAmarillasEquipoDos,
+            p.tarjetasRojasEquipoUno,
+            p.tarjetasRojasEquipoDos,
+            p.jornada
         FROM partido p
         LEFT JOIN equipos e1 ON p.identificadorEquipoUno = e1.identificador
         LEFT JOIN equipos e2 ON p.identificadorEquipoDos = e2.identificador

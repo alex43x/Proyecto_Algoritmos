@@ -44,7 +44,7 @@ def form_partidos(ventana_padre):
     ).pack(side="left", padx=(0, 10))
 
     partidos_todos = get_partidos()
-    jornadas = sorted({p[3] for p in partidos_todos})
+    jornadas = sorted({p[13] for p in partidos_todos})  # jornada está en índice 13
 
     # Diccionario de nombres según el número de jornada
     descripciones = {
@@ -98,9 +98,19 @@ def form_partidos(ventana_padre):
     def cargar_partidos_por_jornada(*_):
         tabla.delete(*tabla.get_children())
         seleccion = combo_jornada.get().split(" - ")[0]  # Obtener solo el número
-        partidos = [p for p in partidos_todos if str(p[3]) == str(seleccion)]
+        partidos = [p for p in partidos_todos if str(p[13]) == str(seleccion)]  # jornada en índice 13
+        
         for p in partidos:
-            tabla.insert("", "end", values=p)
+            # Crear tupla con solo los campos necesarios (sin goles ni tarjetas)
+            valores = (
+                p[0],  # idPartido
+                p[3],  # equipo1_nombre
+                p[4],  # equipo2_nombre
+                p[13], # jornada
+                p[1] if p[1] else "",  # fecha (índice 1)
+                p[2] if p[2] else ""   # hora (índice 2)
+            )
+            tabla.insert("", "end", values=valores)
 
     combo_jornada.bind("<<ComboboxSelected>>", cargar_partidos_por_jornada)
     if jornadas:
@@ -141,6 +151,8 @@ def form_partidos(ventana_padre):
 
     # ================= VALIDACIONES =================
     def validar_fecha(fecha):
+        if not fecha.strip():
+            return True  # Campo vacío es válido
         if not re.match(r"^\d{4}-\d{1,2}-\d{1,2}$", fecha):
             return False
         try:
@@ -151,6 +163,8 @@ def form_partidos(ventana_padre):
             return False
 
     def validar_hora(hora):
+        if not hora.strip():
+            return True  # Campo vacío es válido
         if not re.match(r"^\d{1,2}:\d{2}$", hora):
             return False
         h, m = map(int, hora.split(":"))
@@ -160,25 +174,44 @@ def form_partidos(ventana_padre):
     def guardar_fechas():
         filas = tabla.get_children()
         cambios = 0
+        errores = []
 
         for f in filas:
             valores = tabla.item(f, "values")
-            idp, _, _, _, fecha, hora = valores
+            idp, equipo1, equipo2, jornada, fecha, hora = valores
 
-            if not fecha.strip() and not hora.strip():
+            # Validar formato de fecha y hora
+            if fecha.strip() and not validar_fecha(fecha):
+                errores.append(f"Partido {equipo1} vs {equipo2}: Fecha inválida '{fecha}'. Usa YYYY-MM-DD.")
+                continue
+                
+            if hora.strip() and not validar_hora(hora):
+                errores.append(f"Partido {equipo1} vs {equipo2}: Hora inválida '{hora}'. Usa HH:MM.")
                 continue
 
-            if fecha.strip() and not validar_fecha(fecha):
-                messagebox.showwarning("Formato inválido", f"Fecha incorrecta en partido {idp}. Usa YYYY-MM-DD.")
-                return
-            if hora.strip() and not validar_hora(hora):
-                messagebox.showwarning("Formato inválido", f"Hora incorrecta en partido {idp}. Usa HH:MM.")
-                return
+            # Solo actualizar si al menos uno de los campos tiene valor
+            if fecha.strip() or hora.strip():
+                try:
+                    # Convertir campos vacíos a None para la base de datos
+                    fecha_db = fecha.strip() if fecha.strip() else None
+                    hora_db = hora.strip() if hora.strip() else None
+                    
+                    print(f"Actualizando partido {idp}: fecha='{fecha_db}', hora='{hora_db}'")  # Debug
+                    
+                    update_partido_fecha(idp, fecha_db, hora_db)
+                    cambios += 1
+                    
+                except Exception as e:
+                    errores.append(f"Error al guardar partido {idp}: {str(e)}")
 
-            update_partido_fecha(idp, fecha.strip(), hora.strip())
-            cambios += 1
-
-        if cambios > 0:
+        # Mostrar resultados
+        if errores:
+            messagebox.showerror(
+                "Errores al guardar", 
+                f"Se encontraron {len(errores)} error(es):\n\n" + "\n".join(errores[:5]) + 
+                ("\n\n...y más errores." if len(errores) > 5 else "")
+            )
+        elif cambios > 0:
             messagebox.showinfo("Éxito", f"Fechas de {cambios} partido(s) guardadas correctamente ✅")
             ventana_fechas.destroy()
         else:
