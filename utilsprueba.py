@@ -231,25 +231,32 @@ def InformeCinco(fecha):
 
     Calcula para cada equipo:
         PJ, PG, PE, PP, GF, GC, DG, Pts.
-    Retorna una lista de tuplas organizada por grupo (A-F).
+    Retorna una tupla con:
+        ("Informe 5 - Tabla de posiciones hasta <fecha>", lista_por_grupos)
     """
 
     conn = conectar()
     cursor = conn.cursor()
 
-    # --- Obtener los grupos en orden fijo A-F ---
+    # --- Obtener grupos A-F en orden fijo ---
     cursor.execute("""
         SELECT identificador, nombreGrupo 
         FROM grupos 
-        WHERE nombreGrupo IN ('A', 'B', 'C', 'D', 'E', 'F')
+        WHERE nombreGrupo IN ('A','B','C','D','E','F')
         ORDER BY nombreGrupo ASC;
     """)
     grupos = cursor.fetchall()
 
     resultados_finales = []
 
+    # --- Función auxiliar para ordenar ---
+    def criterio_orden(equipo):
+        # equipo = (pais, PJ, PG, PE, PP, GF, GC, DG, Pts)
+        # Retorna una tupla usada como clave de ordenamiento (Pts, DG, GF)
+        return (equipo[8], equipo[7], equipo[5])
+
     for id_grupo, nombre_grupo in grupos:
-        # --- Obtener equipos del grupo ---
+        # --- Equipos del grupo ---
         cursor.execute("""
             SELECT identificador, pais
             FROM equipos
@@ -263,7 +270,7 @@ def InformeCinco(fecha):
         for id_equipo, pais in equipos:
             PJ = PG = PE = PP = GF = GC = 0
 
-            # --- Partidos donde fue equipo uno ---
+            # --- Partidos como equipo uno ---
             cursor.execute("""
                 SELECT golesEquipoUno, golesEquipoDos
                 FROM partido
@@ -284,7 +291,7 @@ def InformeCinco(fecha):
                 else:
                     PP += 1
 
-            # --- Partidos donde fue equipo dos ---
+            # --- Partidos como equipo dos ---
             cursor.execute("""
                 SELECT golesEquipoDos, golesEquipoUno
                 FROM partido
@@ -310,13 +317,14 @@ def InformeCinco(fecha):
 
             tabla.append((pais, PJ, PG, PE, PP, GF, GC, DG, Pts))
 
-        # --- Ordenar por Pts, DG, GF ---
-        tabla.sort(key=lambda eq: (eq[8], eq[7], eq[5]), reverse=True)
+        # --- Ordenar tabla usando la función auxiliar ---
+        tabla.sort(key=criterio_orden, reverse=True)
 
         resultados_finales.append((nombre_grupo, tabla))
 
     conn.close()
 
-    # --- Retornar tupla al estilo del Informe 1 ---
-    return ("Tabla de posiciones hasta " + fecha, resultados_finales)
+    # --- Retorno estilo Informe 1 ---
+    return ("Informe 5 - Tabla de posiciones hasta " + fecha, resultados_finales)
+
 
