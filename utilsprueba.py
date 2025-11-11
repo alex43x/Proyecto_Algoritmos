@@ -1,161 +1,74 @@
 from controllers.pool import conectar
 from datetime import datetime
 
+
 from controllers.pool import conectar
 
-def tabla_posiciones_por_fecha(fecha):
+from controllers.pool import conectar
+
+def InformeUno(fecha):
     """
-    Genera la tabla de posiciones considerando partidos jugados hasta una fecha dada.
-    Mantiene el formato del Informe 5 y calcula:
-    PJ, PG, PE, PP, GF, GC, DG, Pts.
-    """
-    conn = conectar()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT 
-            e.identificador,
-            e.pais,
-            e.idGrupo,
-            -- Partidos jugados
-            COUNT(p.idPartido) AS partidos_jugados,
-            -- Partidos ganados
-            SUM(
-                CASE 
-                    WHEN (p.identificadorEquipoUno = e.identificador AND p.golesEquipoUno > p.golesEquipoDos)
-                      OR (p.identificadorEquipoDos = e.identificador AND p.golesEquipoDos > p.golesEquipoUno)
-                    THEN 1 ELSE 0 END
-            ) AS ganados,
-            -- Partidos empatados
-            SUM(
-                CASE WHEN p.golesEquipoUno = p.golesEquipoDos THEN 1 ELSE 0 END
-            ) AS empatados,
-            -- Partidos perdidos
-            SUM(
-                CASE 
-                    WHEN (p.identificadorEquipoUno = e.identificador AND p.golesEquipoUno < p.golesEquipoDos)
-                      OR (p.identificadorEquipoDos = e.identificador AND p.golesEquipoDos < p.golesEquipoUno)
-                    THEN 1 ELSE 0 END
-            ) AS perdidos,
-            -- Goles a favor
-            SUM(
-                CASE 
-                    WHEN p.identificadorEquipoUno = e.identificador THEN p.golesEquipoUno
-                    WHEN p.identificadorEquipoDos = e.identificador THEN p.golesEquipoDos
-                    ELSE 0 END
-            ) AS goles_favor,
-            -- Goles en contra
-            SUM(
-                CASE 
-                    WHEN p.identificadorEquipoUno = e.identificador THEN p.golesEquipoDos
-                    WHEN p.identificadorEquipoDos = e.identificador THEN p.golesEquipoUno
-                    ELSE 0 END
-            ) AS goles_contra,
-            -- Diferencia de goles
-            SUM(
-                CASE 
-                    WHEN p.identificadorEquipoUno = e.identificador THEN p.golesEquipoUno - p.golesEquipoDos
-                    WHEN p.identificadorEquipoDos = e.identificador THEN p.golesEquipoDos - p.golesEquipoUno
-                    ELSE 0 END
-            ) AS diferencia_goles,
-            -- Puntos
-            SUM(
-                CASE 
-                    WHEN (p.identificadorEquipoUno = e.identificador AND p.golesEquipoUno > p.golesEquipoDos)
-                      OR (p.identificadorEquipoDos = e.identificador AND p.golesEquipoDos > p.golesEquipoUno)
-                    THEN 3
-                    WHEN p.golesEquipoUno = p.golesEquipoDos THEN 1
-                    ELSE 0 END
-            ) AS puntos
-        FROM equipos e
-        LEFT JOIN partido p
-            ON (e.identificador = p.identificadorEquipoUno OR e.identificador = p.identificadorEquipoDos)
-            AND p.fecha <= ?
-        GROUP BY e.identificador, e.pais, e.idGrupo
-        ORDER BY e.idGrupo, puntos DESC, diferencia_goles DESC, goles_favor DESC;
-    """, (fecha,))
-
-    tabla = cursor.fetchall()
-    conn.close()
-
-    # Agrupar equipos por grupo (igual que en el código original)
-    grupos = {}
-    for fila in tabla:
-        idGrupo = fila[2]
-        if idGrupo not in grupos:
-            grupos[idGrupo] = []
-        grupos[idGrupo].append(fila)
-
-    # --- Mostrar tabla en consola agrupada por grupo ---
-    print(f"\nTABLA DE POSICIONES HASTA LA FECHA {fecha}")
-    print("-" * 90)
-    for idGrupo in grupos:
-        print(f"\nGRUPO {idGrupo}")
-        print(f"{'Identificador':<15}{'Pais':<15}{'PJ':<5}{'PG':<5}{'PE':<5}{'PP':<5}{'GF':<5}{'GC':<5}{'DG':<5}{'Pts':<5}")
-        print("-" * 85)
-        for fila in grupos[idGrupo]:
-            print(f"{fila[0]:<15}{fila[1]:<15}{fila[3]:<5}{fila[4]:<5}{fila[5]:<5}{fila[6]:<5}{fila[7]:<5}{fila[8]:<5}{fila[9]:<5}{fila[10]:<5}")
-
-    # Retornar lista de tuplas con todos los datos
-    return tabla
-
-
-def informe_partidos_por_fecha(fecha):
-    """
-    Informe 1:
-    Devuelve todos los partidos a disputarse en una fecha dada,
-    mostrando equipos, horario, estadio y fase.
-    
-    Parámetro:
-        fecha (str): en formato 'YYYY-MM-DD'
-    
-    Retorna:
-        Lista de tuplas con:
-        (equipo_uno, equipo_dos, hora, fase, estadio)
+    Devuelve una lista de tuplas con los partidos a disputarse en una fecha dada.
+    Cada tupla incluye:
+    (idPartido, equipo1, equipo2, jornada, fase, hora)
     """
     conn = conectar()
     cursor = conn.cursor()
 
     cursor.execute("""
         SELECT 
-            e1.pais AS equipo_uno,
-            e2.pais AS equipo_dos,
-            p.hora,
-            p.fase,
-            p.estadio
+            p.idPartido,
+            e1.pais AS equipo1,
+            e2.pais AS equipo2,
+            p.jornada,
+            p.hora
         FROM partido p
-        INNER JOIN equipos e1 ON e1.identificador = p.identificadorEquipoUno
-        INNER JOIN equipos e2 ON e2.identificador = p.identificadorEquipoDos
+        JOIN equipos e1 ON p.identificadorEquipoUno = e1.identificador
+        JOIN equipos e2 ON p.identificadorEquipoDos = e2.identificador
         WHERE p.fecha = ?
-        ORDER BY p.hora ASC;
+        ORDER BY p.hora
     """, (fecha,))
 
-    partidos = cursor.fetchall()
+    resultados = []
+    for idPartido, equipo1, equipo2, jornada, hora in cursor.fetchall():
+        if jornada in (1, 2, 3):
+            fase = "Fase de grupos"
+        elif jornada == 4:
+            fase = "Octavos de final"
+        elif jornada == 5:
+            fase = "Cuartos de final"
+        elif jornada == 6:
+            fase = "Semifinal"
+        elif jornada == 7:
+            fase = "Tercer puesto"
+        elif jornada == 8:
+            fase = "Final"
+        resultados.append((idPartido, equipo1, equipo2, jornada, fase, hora))
+
     conn.close()
+    return resultados
 
-    # --- Mostrar por consola (solo para depuración o texto simple) ---
-    print(f"\nINFORME 1 - PARTIDOS DEL {fecha}")
-    print("-" * 70)
-    if not partidos:
-        print("No hay partidos programados para esa fecha.")
-    else:
-        for p in partidos:
-            print(f"{p[0]} vs {p[1]} - {p[2]} - {p[3]} - {p[4]}")
+from controllers.pool import conectar
 
-    return partidos
-
-
-def informe_equipo(equipo_nombre, fecha):
+def InformeTres(equipo_nombre, fecha):
     """
     Informe 3:
-    Muestra todos los partidos jugados por un equipo dado hasta una fecha dada
-    y determina si está clasificado a la siguiente fase.
+    Cuadro de resultados para un equipo dado, incluyendo todos sus partidos
+    y su posición final (fase alcanzada) a la conclusión del torneo.
+
+    Retorna:
+        (equipo_nombre, fecha, lista_partidos, estado_final)
+
+        lista_partidos = [
+            (fecha_partido, fase, equipo1, goles1, equipo2, goles2)
+            ...
+        ]
     """
 
     conn = conectar()
     cursor = conn.cursor()
 
-    # Obtener identificador y grupo del equipo
+    # --- Obtener identificador e idGrupo del equipo ---
     cursor.execute("""
         SELECT identificador, idGrupo 
         FROM equipos 
@@ -163,10 +76,11 @@ def informe_equipo(equipo_nombre, fecha):
     """, (equipo_nombre,))
     id_equipo, id_grupo = cursor.fetchone()
 
-    # Obtener los partidos del equipo hasta la fecha dada
+    # --- Obtener todos los partidos jugados por el equipo ---
     cursor.execute("""
         SELECT 
             p.fecha,
+            p.jornada,
             e1.pais AS equipo_uno,
             e2.pais AS equipo_dos,
             p.golesEquipoUno,
@@ -176,124 +90,219 @@ def informe_equipo(equipo_nombre, fecha):
         JOIN equipos e2 ON e2.identificador = p.identificadorEquipoDos
         WHERE (p.identificadorEquipoUno = ? OR p.identificadorEquipoDos = ?)
         AND p.fecha <= ?
-        ORDER BY p.fecha ASC;
+        ORDER BY p.jornada ASC, p.fecha ASC;
     """, (id_equipo, id_equipo, fecha))
 
-    partidos = cursor.fetchall()
+    partidos_raw = cursor.fetchall()
 
-    # Encabezado del informe
-    print(f"\nInforme 3")
-    print(f"Equipo: {equipo_nombre}")
-    print(f"Fecha de emisión del informe: {fecha}\n")
+    # --- Si no tiene partidos, retorno vacío ---
+    if not partidos_raw:
+        conn.close()
+        return (equipo_nombre, fecha, [], "Sin partidos disputados")
 
-    # Mostrar los partidos jugados
-    for p in partidos:
-        fecha_partido, equipo1, equipo2, goles1, goles2 = p
-        fecha_str = fecha_partido.strftime("%d/%m/%Y")
-        fase = "Fase de Grupos"  # fijo por ahora, se puede adaptar luego
+    # --- Asignar fase según jornada ---
+    fases = {
+        1: "Fase de Grupos",
+        2: "Fase de Grupos",
+        3: "Fase de Grupos",
+        4: "Octavos de Final",
+        5: "Cuartos de Final",
+        6: "Semifinal",
+        7: "Tercer Puesto",
+        8: "Final"
+    }
 
-        if equipo1 == equipo_nombre:
-            print(f"{fecha_str} - {fase} - {equipo1} {goles1} : {equipo2} {goles2}")
-        else:
-            print(f"{fecha_str} - {fase} - {equipo2} {goles2} : {equipo1} {goles1}")
+    lista_partidos = []
+    ultima_jornada = 1
+    for p in partidos_raw:
+        fecha_p, jornada, equipo1, equipo2, goles1, goles2 = p
+        fase = fases.get(jornada, "Fase de Grupos")
+        lista_partidos.append((fecha_p, fase, equipo1, goles1, equipo2, goles2))
+        ultima_jornada = max(ultima_jornada, jornada)
 
-    # Calcular tabla de posiciones del grupo hasta la fecha
-    cursor.execute("""
-        SELECT 
-            e.identificador,
-            e.pais,
-            COALESCE(SUM(
-                CASE 
-                    WHEN (p.identificadorEquipoUno = e.identificador AND p.golesEquipoUno > p.golesEquipoDos)
-                      OR (p.identificadorEquipoDos = e.identificador AND p.golesEquipoDos > p.golesEquipoUno)
-                    THEN 3
-                    WHEN p.golesEquipoUno = p.golesEquipoDos THEN 1
-                    ELSE 0 END
-            ), 0) AS puntos
-        FROM equipos e
-        LEFT JOIN partido p
-            ON (e.identificador = p.identificadorEquipoUno OR e.identificador = p.identificadorEquipoDos)
-            AND p.fecha <= ?
-        WHERE e.idGrupo = ?
-        GROUP BY e.identificador, e.pais
-        ORDER BY puntos DESC;
-    """, (fecha, id_grupo))
+    # --- Determinar estado final según última jornada disputada ---
+    estado_final = {
+        1: "Eliminado en Fase de Grupos",
+        2: "Eliminado en Fase de Grupos",
+        3: "Eliminado en Fase de Grupos",
+        4: "Eliminado en Octavos de Final",
+        5: "Eliminado en Cuartos de Final",
+        6: "Eliminado en Semifinal",
+        7: "Partido por Tercer Puesto",
+        8: "Finalista"
+    }.get(ultima_jornada, "Participación desconocida")
+    # --- Si jugó la jornada 8, verificamos si ganó o perdió la final ---
+    if ultima_jornada == 8:
+        ultimo = lista_partidos[-1]
+        _, _, eq1, g1, eq2, g2 = ultimo
+        ganador = eq1 if g1 > g2 else eq2
+        estado_final = "Campeón" if ganador == equipo_nombre else "Subcampeón"
 
-    tabla_grupo = cursor.fetchall()
     conn.close()
+    return (equipo_nombre, fecha, lista_partidos, estado_final)
 
-    # Determinar clasificación (2 primeros del grupo)
-    clasificados = tabla_grupo[:2]
-    clasificado = any(eq[0] == id_equipo for eq in clasificados)
-
-    if clasificado:
-        print("\nClasificado a Octavos de Final")
-    else:
-        print("\nNo clasificado")
-
-    # Retorno para uso interno / interfaz gráfica
-    return (
-        equipo_nombre,
-        fecha,
-        partidos,
-        "Clasificado a Octavos de Final" if clasificado else "No clasificado"
-    )
-
-
-def informe_proximo_partido(equipo_nombre, fecha):
+def InformeCuatro(equipo_nombre, fecha):
     """
     Informe 4:
     Muestra el próximo partido a disputar por un equipo dado, para una fecha dada.
+
+    Parámetros:
+        equipo_nombre (str): Nombre del país (ejemplo: 'Argentina')
+        fecha (str): Fecha en formato 'YYYY-MM-DD'
+
+    Retorna:
+        Tupla con:
+        (fecha_partido, equipo_uno, equipo_dos, hora, jornada, fase)
     """
 
     conn = conectar()
     cursor = conn.cursor()
 
-    # Obtener identificador del equipo
+    # Obtener el identificador del equipo
     cursor.execute("""
-        SELECT identificador FROM equipos WHERE pais = ?;
+        SELECT identificador 
+        FROM equipos 
+        WHERE pais = ?;
     """, (equipo_nombre,))
     id_equipo = cursor.fetchone()[0]
 
-    # Buscar el próximo partido después de la fecha indicada
+    # Buscar el próximo partido posterior a la fecha indicada
     cursor.execute("""
         SELECT 
             p.fecha,
-            p.hora,
+            p.horaDeInicio,
+            p.minuto,
             e1.pais AS equipo_uno,
             e2.pais AS equipo_dos,
-            p.fase,
-            p.estadio
+            p.jornada
         FROM partido p
         JOIN equipos e1 ON e1.identificador = p.identificadorEquipoUno
         JOIN equipos e2 ON e2.identificador = p.identificadorEquipoDos
         WHERE (p.identificadorEquipoUno = ? OR p.identificadorEquipoDos = ?)
-        AND p.fecha > ?
-        ORDER BY p.fecha ASC, p.hora ASC
+          AND p.fecha > ?
+        ORDER BY p.fecha ASC, p.horaDeInicio ASC
         LIMIT 1;
     """, (id_equipo, id_equipo, fecha))
 
     partido = cursor.fetchone()
     conn.close()
 
-    fecha_partido, hora, equipo1, equipo2, fase, estadio = partido
-    fecha_str = fecha_partido.strftime("%d/%m/%Y")
+    if not partido:
+        return None  # No hay próximos partidos
 
-    # Encabezado
-    print(f"\nInforme 4")
-    print(f"Equipo: {equipo_nombre}")
-    print(f"Fecha : {fecha}\n")
+    fecha_partido, hora, minuto, equipo1, equipo2, jornada = partido
 
-    # Detalle del próximo partido
-    print("Copa Mundial Sub-20 de la FIFA Chile 2025™")
-    print(f"{fase} · {estadio} · {fecha_str}")
-    print()
-    if equipo1 == equipo_nombre:
-        print(f"{equipo1[:3].upper()}  vs  {equipo2[:3].upper()}   {hora}")
-    else:
-        print(f"{equipo2[:3].upper()}  vs  {equipo1[:3].upper()}   {hora}")
+    # Determinar fase según jornada
+    if jornada in (1, 2, 3):
+        fase = "Fase de Grupos"
+    elif jornada == 4:
+        fase = "Octavos de Final"
+    elif jornada == 5:
+        fase = "Cuartos de Final"
+    elif jornada == 6:
+        fase = "Semifinal"
+    elif jornada == 7:
+        fase = "Tercer Puesto"
+    elif jornada == 8:
+        fase = "Final"
 
-    # Retorno tipo tupla para informes posteriores
-    return (equipo_nombre, fecha, fecha_partido, hora, equipo1, equipo2, fase, estadio)
+    # Retornar tupla para interfaz
+    return (
+        fecha_partido.strftime("%Y-%m-%d"),
+        f"{hora:02d}:{minuto:02d}",
+        equipo1,
+        equipo2,
+        jornada,
+        fase
+    )
 
+def InformeCinco():
+    """
+    Informe 5:
+    Genera la tabla de posiciones para todos los grupos (fase de grupos).
 
+    Calcula para cada equipo:
+        PJ, PG, PE, PP, GF, GC, DG, Pts.
+    Retorna una lista de tuplas organizada por grupo.
+    """
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    # Obtener todos los grupos existentes
+    cursor.execute("SELECT identificador, nombreGrupo FROM grupos;")
+    grupos = cursor.fetchall()
+
+    resultados_finales = []
+
+    # Función auxiliar para definir el criterio de ordenamiento
+    def criterio_orden(equipo):
+        # equipo = (pais, PJ, PG, PE, PP, GF, GC, DG, Pts)
+        # Retorna una tupla para ordenar por Pts, DG y GF en orden descendente
+        return (equipo[8], equipo[7], equipo[5])
+
+    for id_grupo, nombre_grupo in grupos:
+        # Obtener equipos del grupo
+        cursor.execute("""
+            SELECT identificador, pais
+            FROM equipos
+            WHERE identificadorGrupo = ?;
+        """, (id_grupo,))
+        equipos = cursor.fetchall()
+
+        tabla = []
+
+        for id_equipo, pais in equipos:
+            # Estadísticas iniciales
+            PJ = PG = PE = PP = GF = GC = 0
+
+            # Partidos donde fue equipo uno
+            cursor.execute("""
+                SELECT golesEquipoUno, golesEquipoDos
+                FROM partido
+                WHERE identificadorEquipoUno = ? AND jornada IN (1,2,3);
+            """, (id_equipo,))
+            partidos_uno = cursor.fetchall()
+
+            for gf, gc in partidos_uno:
+                PJ += 1
+                GF += gf
+                GC += gc
+                if gf > gc:
+                    PG += 1
+                elif gf == gc:
+                    PE += 1
+                else:
+                    PP += 1
+
+            # Partidos donde fue equipo dos
+            cursor.execute("""
+                SELECT golesEquipoDos, golesEquipoUno
+                FROM partido
+                WHERE identificadorEquipoDos = ? AND jornada IN (1,2,3);
+            """, (id_equipo,))
+            partidos_dos = cursor.fetchall()
+
+            for gf, gc in partidos_dos:
+                PJ += 1
+                GF += gf
+                GC += gc
+                if gf > gc:
+                    PG += 1
+                elif gf == gc:
+                    PE += 1
+                else:
+                    PP += 1
+
+            DG = GF - GC
+            Pts = PG * 3 + PE * 1
+
+            tabla.append((pais, PJ, PG, PE, PP, GF, GC, DG, Pts))
+
+        # Ordenar la tabla usando la función auxiliar (en reversa)
+        tabla.sort(key=criterio_orden, reverse=True)
+
+        resultados_finales.append((nombre_grupo, tabla))
+
+    conn.close()
+    return resultados_finales
