@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import messagebox
 from views.menu_torneo import pantalla_configuracion
 from views.menu_resultados import pantalla_resultados
+from views.menu_informes import pantalla_informes
+
 from utils import carga_completa_fechas  # Importar la función
 
 
@@ -55,8 +57,8 @@ def menu_principal(ventana):
         menu_principal(v)
 
     def abrir_emision_informes():
-        messagebox.showinfo("Emisión de informes", "Módulo de emisión de informes en desarrollo.")
-
+        pantalla_informes(ventana, volver_al_menu)
+        
     def salir_aplicacion():
         ventana.destroy()
 
