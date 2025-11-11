@@ -12,7 +12,7 @@ def insert_partido(datos):
             tarjetasAmarillasEquipoUno, tarjetasAmarillasEquipoDos,
             tarjetasRojasEquipoUno, tarjetasRojasEquipoDos, jornada
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, datos)
     conn.commit()
     conn.close()
@@ -45,20 +45,6 @@ def get_partido_sin_jugar():
     partidos = cursor.fetchall()
     conn.close()
     return partidos
-
-#MODIFICAR 
-def get_puntos_partido():
-    """Devuelve los puntos asignados por partido."""
-    conn = conectar()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT idPartido, fecha, puntosEquipoUno, puntosEquipoDos
-        FROM partido
-    """)
-    partidos = cursor.fetchall()
-    conn.close()
-    return partidos
-
 # LISTA CON TODOS LOS PARTIDOS Y SUS DATOS PRINCIPALES
 def get_partidos():
     """

@@ -209,7 +209,7 @@ def actualizar_detalles_eliminatorias(jornada):
             UPDATE partido
             SET golesEquipoUno = ?, golesEquipoDos = ?,
                 tarjetasAmarillasEquipoUno = ?, tarjetasAmarillasEquipoDos = ?,
-                tarjetasRojasEquipoUno = ?, tarjetasRojasEquipoDos = ?,
+                tarjetasRojasEquipoUno = ?, tarjetasRojasEquipoDos = ?
             WHERE idPartido = ? AND jornada = ?;
         """, (*datos, id_partido, jornada))
     conn.commit()
@@ -316,9 +316,10 @@ def asignar_semifinales():
     conn.close()
     print("Equipos de semifinales asignados correctamente en la jornada 6.")
 #para asignar las finales, misma logica que las anteriores, solo con la diferencia que guarda los persdedores para el tercer puesto.
-def asignar_finales():
+def asignar_tercer_puesto():
     conn = conectar()
     cursor = conn.cursor()
+    # Traer semifinales (jornada 6)
     cursor.execute("""
         SELECT identificadorEquipoUno, identificadorEquipoDos,
                golesEquipoUno, golesEquipoDos
@@ -327,43 +328,87 @@ def asignar_finales():
         ORDER BY idPartido ASC;
     """)
     partidos_semis = cursor.fetchall()
-    ganadores = []
+    # Determinar perdedores directamente
     perdedores = []
-    for fila in partidos_semis:
-        equipo_uno = fila[0]
-        equipo_dos = fila[1]
-        goles_uno = fila[2]
-        goles_dos = fila[3]
-
-        if goles_uno > goles_dos:
-            ganadores.append(equipo_uno)
-            perdedores.append(equipo_dos)
+    for eq1, eq2, g1, g2 in partidos_semis:
+        if g1 > g2:
+            perdedores.append(eq2)
         else:
-            ganadores.append(equipo_dos)
-            perdedores.append(equipo_uno)
-    enfrentamientos = [
-        (ganadores[0], ganadores[1]),   # Final
-        (perdedores[0], perdedores[1])  # 3er puesto
-    ]
+            perdedores.append(eq1)
+
+    # Obtener el partido del tercer puesto (jornada 7)
     cursor.execute("""
         SELECT idPartido
         FROM partido
         WHERE jornada = 7
         ORDER BY idPartido ASC;
     """)
-    partidos_final = cursor.fetchall()
+    fila = cursor.fetchone()
 
-    for f in range(len(partidos_final)):
-        id_partido = partidos_final[f][0]
-        equipo_uno = enfrentamientos[f][0]
-        equipo_dos = enfrentamientos[f][1]
+    if fila is not None:
+        id_partido = fila[0]
+
+        equipo_uno = perdedores[0]
+        equipo_dos = perdedores[1]
+
         cursor.execute("""
             UPDATE partido
             SET identificadorEquipoUno = ?, identificadorEquipoDos = ?
             WHERE idPartido = ?;
         """, (equipo_uno, equipo_dos, id_partido))
+
+        print("Equipos del 3er puesto asignados correctamente en la jornada 7.")
+    else:
+        print("No existe partido asignado para la jornada 7.")
+
     conn.commit()
     conn.close()
-    print("Equipos de la final y 3er puesto asignados correctamente en la jornada 7.")
+def asignar_final():
+    conn = conectar()
+    cursor = conn.cursor()
+
+    # Traer semifinales (jornada 6)
+    cursor.execute("""
+        SELECT identificadorEquipoUno, identificadorEquipoDos,
+               golesEquipoUno, golesEquipoDos
+        FROM partido
+        WHERE jornada = 6
+        ORDER BY idPartido ASC;
+    """)
+    partidos_semis = cursor.fetchall()
+
+    # Determinar ganadores directamente
+    ganadores = []
+    for eq1, eq2, g1, g2 in partidos_semis:
+        if g1 > g2:
+            ganadores.append(eq1)
+        else:
+            ganadores.append(eq2)
+
+    # Obtener el partido de la FINAL (jornada 8)
+    cursor.execute("""
+        SELECT idPartido
+        FROM partido
+        WHERE jornada = 8
+        ORDER BY idPartido ASC;
+    """)
+    fila = cursor.fetchone()
+
+    if fila is not None:
+        id_partido = fila[0]
+
+        equipo_uno = ganadores[0]
+        equipo_dos = ganadores[1]
+
+        cursor.execute("""
+            UPDATE partido
+            SET identificadorEquipoUno = ?, identificadorEquipoDos = ?
+            WHERE idPartido = ?;
+        """, (equipo_uno, equipo_dos, id_partido))
+
+        print("Equipos de la FINAL asignados correctamente en la jornada 8.")
+    else:
+        print("No existe partido asignado para la jornada 8.")
+    conn.commit()
+    conn.close()
 #OJO todo esto pensado que para definir 4tos ya esta totalmente cargado la platilla de 8vos, 4tos para semis y semis para final.
-#agg uno aparte para tercer puesto para diferenciar de la final.
