@@ -1,11 +1,6 @@
 from controllers.pool import conectar
 from datetime import datetime
 
-
-from controllers.pool import conectar
-
-from controllers.pool import conectar
-
 def InformeUno(fecha):
     """
     Devuelve una lista de tuplas con los partidos a disputarse en una fecha dada.
