@@ -10,6 +10,7 @@ from views.form_grupo import form_grupo
 from views.form_equipo import form_equipo
 from views.form_partidos import form_partidos   
 from models.torneo import Torneo
+from utils import carga_completa_fechas  # Importar la función
 
 def pantalla_configuracion(ventana, volver_menu):
     for widget in ventana.winfo_children():
@@ -55,7 +56,7 @@ def pantalla_configuracion(ventana, volver_menu):
             return
 
         Torneo(nombre, sede, fecha_inicio, fecha_fin).guardar()
-        messagebox.showinfo("Éxito", "Torneo registrado correctamente")
+        messagebox.showinfo("Cambios Guardados", "Torneo registrado correctamente")
         volver_menu(ventana)
 
     def volver_menu_principal():
@@ -199,6 +200,14 @@ def pantalla_configuracion(ventana, volver_menu):
                 b_equipos.config(bg="#cccccc", fg="#666", text="Agregar Equipo (Faltan grupos)")
             else:
                 b_equipos.config(bg="#68ab98", fg="white", text="Agregar Equipo")
+                
+            # Verificar si todas las fechas están cargadas
+            if carga_completa_fechas():
+                b_partidos.config(bg="#cccccc", fg="#666", text="Fechas Cargadas (Completado)")
+                b_partidos.config(state="disabled")
+            else:
+                b_partidos.config(bg="#68ab98", fg="white", text="Registrar Fechas de Partidos")
+                b_partidos.config(state="normal")
 
         def actualizar_grupos_equipos():
             mostrar_grupos_equipos()
@@ -235,7 +244,8 @@ def pantalla_configuracion(ventana, volver_menu):
             if len(get_equipo()) < 24:
                 messagebox.showwarning("Atención", "Debes cargar los 24 equipos antes de registrar los partidos.")
                 return
-            form_partidos(ventana)
+            # Pasar el callback para actualizar el estado del botón
+            form_partidos(ventana, actualizar_estados_botones)
 
         # --- Botones ---
 
@@ -255,12 +265,13 @@ def pantalla_configuracion(ventana, volver_menu):
         )
         b_equipos.pack(anchor="center", pady=8)
 
-        tk.Button(
+        b_partidos = tk.Button(
             frame_info,
             text="Registrar Fechas de Partidos",
             command=abrir_form_partidos,
             **boton_estilo
-        ).pack(anchor="center", pady=8)
+        )
+        b_partidos.pack(anchor="center", pady=8)
 
         tk.Button(
             frame_info,
@@ -268,6 +279,7 @@ def pantalla_configuracion(ventana, volver_menu):
             command=volver_menu_principal,
             **boton_estilo
         ).pack(anchor="center", pady=8)
+        
         # Inicializa los estados visuales
         actualizar_estados_botones()
 

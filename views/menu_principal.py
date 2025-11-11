@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 from views.menu_torneo import pantalla_configuracion
 from views.menu_resultados import pantalla_resultados
+from utils import carga_completa_fechas  # Importar la función
 
 
 def menu_principal(ventana):
@@ -40,6 +41,14 @@ def menu_principal(ventana):
         pantalla_configuracion(ventana, volver_al_menu)
         
     def abrir_registro_resultados():
+        # Verificar si todas las fechas están cargadas antes de permitir el acceso
+        if not carga_completa_fechas():
+            messagebox.showwarning(
+                "Calendario Incompleto", 
+                "No se puede acceder al registro de resultados hasta que todas las fechas y horas de los partidos estén cargadas.\n\n"
+                "Por favor, completa primero el calendario en la Configuración del Torneo."
+            )
+            return
         pantalla_resultados(ventana, volver_al_menu)
 
     def volver_al_menu(v):
@@ -102,7 +111,7 @@ def menu_principal(ventana):
     # pie de página
     tk.Label(
         ventana,
-        text="Desarrollado por sintax fc © 2025",
+        text="Desarrollado por Sintax FC © 2025",
         font=("Segoe UI", 9),
         bg="#f5f5f5",
         fg="#777"

@@ -3,13 +3,13 @@ from tkinter import ttk, messagebox
 import re
 import datetime
 from controllers.partido import get_partidos, update_partido_fecha
+from utils import carga_completa_fechas  # Importar la función
 
 
-def form_partidos(ventana_padre):
+def form_partidos(ventana_padre, callback_actualizar=None):
     """
     Abre una ventana para registrar o editar fechas y horas de los partidos.
     """
-
     ventana_fechas = tk.Toplevel(ventana_padre)
     ventana_fechas.title("Registrar fechas de los partidos")
     ventana_fechas.state("zoomed")
@@ -118,6 +118,11 @@ def form_partidos(ventana_padre):
 
     # ================= EDICIÓN EN LA TABLA =================
     def editar_celda(event):
+        # Verificar si ya está todo cargado
+        if carga_completa_fechas():
+            messagebox.showinfo("Calendario Completo", "El calendario de partidos ya está completamente cargado y no se pueden realizar más modificaciones.")
+            return
+            
         item = tabla.identify_row(event.y)
         col = tabla.identify_column(event.x)
         if not item or col not in ("#5", "#6"):  # Solo fecha (#5) y hora (#6)
@@ -134,15 +139,16 @@ def form_partidos(ventana_padre):
             return
         entry.place(x=bbox[0] + 2, y=bbox[1] + 2, width=bbox[2] - 4, height=bbox[3] - 4)
 
-        def guardar_editado(evento):
+        def guardar_editado(evento=None):
             nuevo_valor = entry.get().strip()
             valores = list(tabla.item(item, "values"))
             valores[col_index] = nuevo_valor
             tabla.item(item, values=valores)
             entry.destroy()
 
-        def destruir_entry(evento):
-            entry.destroy()
+        def destruir_entry(evento=None):
+            # Guardar el valor antes de destruir el entry
+            guardar_editado()
 
         entry.bind("<Return>", guardar_editado)
         entry.bind("<FocusOut>", destruir_entry)
@@ -172,6 +178,11 @@ def form_partidos(ventana_padre):
 
     # ================= GUARDAR CAMBIOS =================
     def guardar_fechas():
+        # Verificar si ya está todo cargado
+        if carga_completa_fechas():
+            messagebox.showinfo("Calendario Completo", "El calendario de partidos ya está completamente cargado. No se pueden realizar más modificaciones.")
+            return
+            
         filas = tabla.get_children()
         cambios = 0
         errores = []
@@ -212,7 +223,10 @@ def form_partidos(ventana_padre):
                 ("\n\n...y más errores." if len(errores) > 5 else "")
             )
         elif cambios > 0:
-            messagebox.showinfo("Éxito", f"Fechas de {cambios} partido(s) guardadas correctamente ✅")
+            messagebox.showinfo("Cambios Guardados", f"Fechas de {cambios} partido(s) guardadas correctamente ✅")
+            # Llamar al callback para actualizar el estado del botón en el menú principal
+            if callback_actualizar:
+                callback_actualizar()
             ventana_fechas.destroy()
         else:
             messagebox.showinfo("Sin cambios", "No se realizaron modificaciones.")
@@ -221,7 +235,12 @@ def form_partidos(ventana_padre):
     frame_botones = tk.Frame(ventana_fechas, bg="#f8f8f8")
     frame_botones.pack(pady=15)
 
-    tk.Button(
+    # Verificar estado inicial para deshabilitar botón si ya está completo
+    estado_boton = "normal"
+    if carga_completa_fechas():
+        estado_boton = "disabled"
+
+    btn_guardar = tk.Button(
         frame_botones,
         text="Guardar Fechas",
         font=("Segoe UI", 12, "bold"),
@@ -231,8 +250,10 @@ def form_partidos(ventana_padre):
         width=18,
         relief="flat",
         padx=5,
-        pady=5
-    ).grid(row=0, column=0, padx=15)
+        pady=5,
+        state=estado_boton
+    )
+    btn_guardar.grid(row=0, column=0, padx=15)
 
     tk.Button(
         frame_botones,
