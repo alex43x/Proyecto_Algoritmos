@@ -69,7 +69,7 @@ def InformeTres(equipo_nombre, fecha):
         FROM equipos 
         WHERE pais = ?;
     """, (equipo_nombre,))
-    id_equipo, id_grupo = cursor.fetchone()
+    id_equipo, idGrupo = cursor.fetchone()
 
     # --- Obtener todos los partidos jugados por el equipo ---
     cursor.execute("""
@@ -95,43 +95,50 @@ def InformeTres(equipo_nombre, fecha):
         conn.close()
         return (equipo_nombre, fecha, [], "Sin partidos disputados")
 
-    # --- Asignar fase según jornada ---
-    fases = {
-        1: "Fase de Grupos",
-        2: "Fase de Grupos",
-        3: "Fase de Grupos",
-        4: "Octavos de Final",
-        5: "Cuartos de Final",
-        6: "Semifinal",
-        7: "Tercer Puesto",
-        8: "Final"
-    }
-
     lista_partidos = []
     ultima_jornada = 1
+
+    # --- Asignar fase según jornada (sin diccionario) ---
     for p in partidos_raw:
         fecha_p, jornada, equipo1, equipo2, goles1, goles2 = p
-        fase = fases.get(jornada, "Fase de Grupos")
+
+        if jornada in (1, 2, 3):
+            fase = "Fase de Grupos"
+        elif jornada == 4:
+            fase = "Octavos de Final"
+        elif jornada == 5:
+            fase = "Cuartos de Final"
+        elif jornada == 6:
+            fase = "Semifinal"
+        elif jornada == 7:
+            fase = "Tercer Puesto"
+        elif jornada == 8:
+            fase = "Final"
+        else:
+            fase = "Fase de Grupos"
+
         lista_partidos.append((fecha_p, fase, equipo1, goles1, equipo2, goles2))
         ultima_jornada = max(ultima_jornada, jornada)
 
     # --- Determinar estado final según última jornada disputada ---
-    estado_final = {
-        1: "Eliminado en Fase de Grupos",
-        2: "Eliminado en Fase de Grupos",
-        3: "Eliminado en Fase de Grupos",
-        4: "Eliminado en Octavos de Final",
-        5: "Eliminado en Cuartos de Final",
-        6: "Eliminado en Semifinal",
-        7: "Partido por Tercer Puesto",
-        8: "Finalista"
-    }.get(ultima_jornada, "Participación desconocida")
-    # --- Si jugó la jornada 8, verificamos si ganó o perdió la final ---
-    if ultima_jornada == 8:
+    if ultima_jornada <= 3:
+        estado_final = "Eliminado en Fase de Grupos"
+    elif ultima_jornada == 4:
+        estado_final = "Eliminado en Octavos de Final"
+    elif ultima_jornada == 5:
+        estado_final = "Eliminado en Cuartos de Final"
+    elif ultima_jornada == 6:
+        estado_final = "Eliminado en Semifinal"
+    elif ultima_jornada == 7:
+        estado_final = "Partido por Tercer Puesto"
+    elif ultima_jornada == 8:
+        # --- Si jugó la jornada 8, verificamos si ganó o perdió la final ---
         ultimo = lista_partidos[-1]
         _, _, eq1, g1, eq2, g2 = ultimo
         ganador = eq1 if g1 > g2 else eq2
         estado_final = "Campeón" if ganador == equipo_nombre else "Subcampeón"
+    else:
+        estado_final = "Participación desconocida"
 
     conn.close()
     return (equipo_nombre, fecha, lista_partidos, estado_final)
@@ -139,7 +146,7 @@ def InformeTres(equipo_nombre, fecha):
 def InformeCuatro(equipo_nombre, fecha):
     """
     Informe 4:
-    Muestra el próximo partido a disputar por un equipo dado, para una fecha dada.
+    Devuelve el próximo partido a disputar por un equipo dado, para una fecha dada.
 
     Parámetros:
         equipo_nombre (str): Nombre del país (ejemplo: 'Argentina')
@@ -148,12 +155,13 @@ def InformeCuatro(equipo_nombre, fecha):
     Retorna:
         Tupla con:
         (fecha_partido, equipo_uno, equipo_dos, hora, jornada, fase)
+        o None si no hay próximos partidos.
     """
 
     conn = conectar()
     cursor = conn.cursor()
 
-    # Obtener el identificador del equipo
+    # --- Obtener identificador del equipo ---
     cursor.execute("""
         SELECT identificador 
         FROM equipos 
@@ -161,7 +169,7 @@ def InformeCuatro(equipo_nombre, fecha):
     """, (equipo_nombre,))
     id_equipo = cursor.fetchone()[0]
 
-    # Buscar el próximo partido posterior a la fecha indicada
+    # --- Buscar el próximo partido posterior a la fecha dada ---
     cursor.execute("""
         SELECT 
             p.fecha,
@@ -182,12 +190,13 @@ def InformeCuatro(equipo_nombre, fecha):
     partido = cursor.fetchone()
     conn.close()
 
+    # --- Si no hay próximos partidos ---
     if not partido:
-        return None  # No hay próximos partidos
+        return None
 
     fecha_partido, hora, minuto, equipo1, equipo2, jornada = partido
 
-    # Determinar fase según jornada
+    # --- Determinar fase según jornada ---
     if jornada in (1, 2, 3):
         fase = "Fase de Grupos"
     elif jornada == 4:
@@ -200,63 +209,68 @@ def InformeCuatro(equipo_nombre, fecha):
         fase = "Tercer Puesto"
     elif jornada == 8:
         fase = "Final"
+    else:
+        fase = "Fase de Grupos"
 
-    # Retornar tupla para interfaz
+    # --- Retornar tupla simple, formato igual al Informe 1 ---
     return (
         fecha_partido.strftime("%Y-%m-%d"),
-        f"{hora:02d}:{minuto:02d}",
         equipo1,
         equipo2,
+        f"{hora:02d}:{minuto:02d}",
         jornada,
         fase
     )
 
-def InformeCinco():
+
+def InformeCinco(fecha):
     """
     Informe 5:
-    Genera la tabla de posiciones para todos los grupos (fase de grupos).
+    Genera la tabla de posiciones para todos los grupos (fase de grupos),
+    considerando solo los partidos jugados hasta la fecha indicada.
 
     Calcula para cada equipo:
         PJ, PG, PE, PP, GF, GC, DG, Pts.
-    Retorna una lista de tuplas organizada por grupo.
+    Retorna una lista de tuplas organizada por grupo (A-F).
     """
 
     conn = conectar()
     cursor = conn.cursor()
 
-    # Obtener todos los grupos existentes
-    cursor.execute("SELECT identificador, nombreGrupo FROM grupos;")
+    # --- Obtener los grupos en orden fijo A-F ---
+    cursor.execute("""
+        SELECT identificador, nombreGrupo 
+        FROM grupos 
+        WHERE nombreGrupo IN ('A', 'B', 'C', 'D', 'E', 'F')
+        ORDER BY nombreGrupo ASC;
+    """)
     grupos = cursor.fetchall()
 
     resultados_finales = []
 
-    # Función auxiliar para definir el criterio de ordenamiento
-    def criterio_orden(equipo):
-        # equipo = (pais, PJ, PG, PE, PP, GF, GC, DG, Pts)
-        # Retorna una tupla para ordenar por Pts, DG y GF en orden descendente
-        return (equipo[8], equipo[7], equipo[5])
-
     for id_grupo, nombre_grupo in grupos:
-        # Obtener equipos del grupo
+        # --- Obtener equipos del grupo ---
         cursor.execute("""
             SELECT identificador, pais
             FROM equipos
-            WHERE identificadorGrupo = ?;
+            WHERE identificadorGrupo = ?
+            ORDER BY pais ASC;
         """, (id_grupo,))
         equipos = cursor.fetchall()
 
         tabla = []
 
         for id_equipo, pais in equipos:
-            # Estadísticas iniciales
             PJ = PG = PE = PP = GF = GC = 0
 
-            # Partidos donde fue equipo uno
+            # --- Partidos donde fue equipo uno ---
             cursor.execute("""
                 SELECT golesEquipoUno, golesEquipoDos
                 FROM partido
-                WHERE identificadorEquipoUno = ? AND jornada IN (1,2,3);
-            """, (id_equipo,))
+                WHERE identificadorEquipoUno = ?
+                  AND jornada IN (1,2,3)
+                  AND fecha <= ?;
+            """, (id_equipo, fecha))
             partidos_uno = cursor.fetchall()
 
             for gf, gc in partidos_uno:
@@ -270,12 +284,14 @@ def InformeCinco():
                 else:
                     PP += 1
 
-            # Partidos donde fue equipo dos
+            # --- Partidos donde fue equipo dos ---
             cursor.execute("""
                 SELECT golesEquipoDos, golesEquipoUno
                 FROM partido
-                WHERE identificadorEquipoDos = ? AND jornada IN (1,2,3);
-            """, (id_equipo,))
+                WHERE identificadorEquipoDos = ?
+                  AND jornada IN (1,2,3)
+                  AND fecha <= ?;
+            """, (id_equipo, fecha))
             partidos_dos = cursor.fetchall()
 
             for gf, gc in partidos_dos:
@@ -290,14 +306,17 @@ def InformeCinco():
                     PP += 1
 
             DG = GF - GC
-            Pts = PG * 3 + PE * 1
+            Pts = PG * 3 + PE
 
             tabla.append((pais, PJ, PG, PE, PP, GF, GC, DG, Pts))
 
-        # Ordenar la tabla usando la función auxiliar (en reversa)
-        tabla.sort(key=criterio_orden, reverse=True)
+        # --- Ordenar por Pts, DG, GF ---
+        tabla.sort(key=lambda eq: (eq[8], eq[7], eq[5]), reverse=True)
 
         resultados_finales.append((nombre_grupo, tabla))
 
     conn.close()
-    return resultados_finales
+
+    # --- Retornar tupla al estilo del Informe 1 ---
+    return ("Tabla de posiciones hasta " + fecha, resultados_finales)
+
