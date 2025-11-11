@@ -2,16 +2,6 @@ from .pool import conectar
 
 # INSERTAR NUEVO PARTIDO
 def insert_partido(datos):
-    """
-    Inserta un nuevo partido en la base de datos.
-    datos debe ser una tupla con este orden:
-    (fecha, hora, idEquipo1, idEquipo2,
-     goles1, goles2,
-     amarillas1, amarillas2,
-     rojas1, rojas2,
-     puntos1, puntos2,
-     jornada)
-    """
     conn = conectar()
     cursor = conn.cursor()
     cursor.execute("""
@@ -20,22 +10,14 @@ def insert_partido(datos):
             identificadorEquipoUno, identificadorEquipoDos,
             golesEquipoUno, golesEquipoDos,
             tarjetasAmarillasEquipoUno, tarjetasAmarillasEquipoDos,
-            tarjetasRojasEquipoUno, tarjetasRojasEquipoDos,
-            puntosEquipoUno, puntosEquipoDos, jornada
+            tarjetasRojasEquipoUno, tarjetasRojasEquipoDos, jornada
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, datos)
     conn.commit()
     conn.close()
-
-
 # ACTUALIZAR PARTIDO COMPLETO (GOLES, TARJETAS, PUNTOS)
 def update_partido(datos):
-    """
-    Actualiza los datos de un partido existente (goles, tarjetas, puntos).
-    datos debe ser una tupla con este orden:
-    (goles1, goles2, amarillas1, amarillas2, rojas1, rojas2, puntos1, puntos2, idPartido)
-    """
     conn = conectar()
     cursor = conn.cursor()
     cursor.execute("""
@@ -46,14 +28,10 @@ def update_partido(datos):
             tarjetasAmarillasEquipoDos = ?,
             tarjetasRojasEquipoUno = ?,
             tarjetasRojasEquipoDos = ?,
-            puntosEquipoUno = ?,
-            puntosEquipoDos = ?
         WHERE idPartido = ?
     """, datos)
     conn.commit()
     conn.close()
-
-
 # OBTENER PARTIDOS SIN JUGAR
 def get_partido_sin_jugar():
     """Devuelve los partidos (id, fecha, equipos) que aún no se han jugado."""
@@ -68,8 +46,7 @@ def get_partido_sin_jugar():
     conn.close()
     return partidos
 
-
-# OBTENER PUNTOS DE PARTIDOS
+#MODIFICAR 
 def get_puntos_partido():
     """Devuelve los puntos asignados por partido."""
     conn = conectar()
