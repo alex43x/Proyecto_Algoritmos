@@ -138,35 +138,40 @@ def clasificados_eliminatoria(tabla_pos):
     
     return equipos_clasificados
 
-
 def definir_enfrentamientos_octavos(equipos_clasificados):
     terceros = equipos_clasificados[-4:]
     combinacion = "".join(sorted([t[0][0] for t in terceros]))
+
+    # Combinaciones posibles según la FIFA (sin repeticiones)
     combinaciones_validas = [
-        ("ABCD", "3C", "3D", "3A"),
-        ("ABCE", "3C", "3A", "3B"),
-        ("ABCF", "3C", "3A", "3B"),
-        ("ABDE", "3D", "3A", "3B"),
-        ("ABDF", "3D", "3A", "3B"),
-        ("ABEF", "3E", "3A", "3B"),
-        ("ACDE", "3E", "3D", "3A"),
-        ("ACDF", "3C", "3D", "3A"),
-        ("ACEF", "3C", "3A", "3F"),
-        ("ADEF", "3D", "3A", "3F"),
-        ("BCDE", "3C", "3D", "3B"),
-        ("BCDF", "3C", "3D", "3B"),
-        ("BCEF", "3E", "3C", "3B"),
-        ("BDEF", "3E", "3D", "3B"),
-        ("CDEF", "3C", "3D", "3F")
+        ("ABCD", "3C", "3D", "3A", "3B"),
+        ("ABCE", "3C", "3A", "3B", "3E"),
+        ("ABCF", "3C", "3A", "3B", "3F"),
+        ("ABDE", "3D", "3A", "3B", "3E"),
+        ("ABDF", "3D", "3A", "3B", "3F"),
+        ("ABEF", "3E", "3A", "3B", "3F"),
+        ("ACDE", "3E", "3D", "3A", "3C"),
+        ("ACDF", "3C", "3D", "3A", "3F"),
+        ("ACEF", "3C", "3A", "3F", "3E"),
+        ("ADEF", "3D", "3A", "3F", "3E"),
+        ("BCDE", "3C", "3D", "3B", "3E"),
+        ("BCDF", "3C", "3D", "3B", "3F"),
+        ("BCEF", "3E", "3C", "3B", "3F"),
+        ("BDEF", "3E", "3D", "3B", "3F"),
+        ("CDEF", "3C", "3D", "3F", "3E")
     ]
+
     contrario_1D = ""
     contrario_1B = ""
     contrario_1A = ""
+    contrario_1C = ""
+
     for comb in combinaciones_validas:
         if combinacion == comb[0]:
             contrario_1D = comb[1]
             contrario_1B = comb[2]
             contrario_1A = comb[3]
+            contrario_1C = comb[4]
 
     def buscar_equipo(alias):
         if alias == "":
@@ -187,18 +192,23 @@ def definir_enfrentamientos_octavos(equipos_clasificados):
         (3, "1B", contrario_1B),
         (4, "1F", "2E"),
         (5, "1E", "2D"),
-        (6, "1C", contrario_1A),
+        (6, "1C", contrario_1C),  # ✅ ahora usa su propio contrario
         (7, "2B", "2F"),
         (8, "1A", contrario_1A)
     ]
+
     resultado = []
+    usados = set()
+
     for id_partido, alias1, alias2 in enfrentamientos_alias:
         id1, pais1 = buscar_equipo(alias1)
         id2, pais2 = buscar_equipo(alias2)
-        if id2 != "":
+        if id1 not in usados and id2 not in usados and id1 != "" and id2 != "":
+            usados.add(id1)
+            usados.add(id2)
             resultado.append((id_partido, id1, pais1, id2, pais2))
-    return resultado
 
+    return resultado
 
 def ultima_fecha_jornada():
     conn = conectar()
