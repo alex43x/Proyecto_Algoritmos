@@ -203,7 +203,7 @@ def pantalla_configuracion(ventana, volver_menu):
                 
             # Verificar si todas las fechas están cargadas
             if carga_completa_fechas():
-                b_partidos.config(bg="#cccccc", fg="#666", text="Fechas Cargadas (Completado)")
+                b_partidos.config(bg="#cccccc", fg="#666", text="Fechas Cargadas (Cerrado)")
                 b_partidos.config(state="disabled")
             else:
                 b_partidos.config(bg="#68ab98", fg="white", text="Registrar Fechas de Partidos")
@@ -215,6 +215,8 @@ def pantalla_configuracion(ventana, volver_menu):
             if len(get_equipo())==24 and len(get_partidos())==0:
                 crear_partidos_fase_grupos()
                 crear_partidos_fase_final()
+                b_partidos.config(state="normal", bg="#68ab98", fg="white", text="Registrar Fechas de Partidos")
+                
             if len(get_grupo()) >= 6:
                 b_grupos.config(state="disabled")
             else:
