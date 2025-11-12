@@ -1,5 +1,7 @@
 from controllers.pool import conectar
 import datetime
+from controllers.penales import get_penales_por_partido
+
 
 def tabla_posiciones_general():
     conn = conectar()
@@ -101,6 +103,7 @@ def tabla_posiciones_general():
         salida.append((fila[0], fila[1], fila[3]))
     return salida
 
+
 def clasificados_eliminatoria(tabla_pos):
     def ordenar_terceros(lista):
         n = len(lista)
@@ -135,17 +138,10 @@ def clasificados_eliminatoria(tabla_pos):
     
     return equipos_clasificados
 
+
 def definir_enfrentamientos_octavos(equipos_clasificados):
-    """
-    Define los enfrentamientos de octavos de final según las combinaciones oficiales
-    de grupos de terceros (tablas 12.5 y 12.6).
-    Recibe una lista de equipos clasificados ordenada: [(id, pais), ...]
-    Retorna una lista de tuplas: (id_partido, id1, pais1, id2, pais2)
-    """
-    # Identificar los cuatro mejores terceros
     terceros = equipos_clasificados[-4:]
     combinacion = "".join(sorted([t[0][0] for t in terceros]))
-    # Tabla de combinaciones válidas (según la UEFA)
     combinaciones_validas = [
         ("ABCD", "3C", "3D", "3A"),
         ("ABCE", "3C", "3A", "3B"),
@@ -163,7 +159,6 @@ def definir_enfrentamientos_octavos(equipos_clasificados):
         ("BDEF", "3E", "3D", "3B"),
         ("CDEF", "3C", "3D", "3F")
     ]
-    # Determinar los contrarios de 1D, 1B y 1A según la combinación de terceros
     contrario_1D = ""
     contrario_1B = ""
     contrario_1A = ""
@@ -172,7 +167,7 @@ def definir_enfrentamientos_octavos(equipos_clasificados):
             contrario_1D = comb[1]
             contrario_1B = comb[2]
             contrario_1A = comb[3]
-    # Buscar un equipo por su alias ("1A", "2B", "3C", etc.)
+
     def buscar_equipo(alias):
         if alias == "":
             return ("", "")
@@ -185,7 +180,7 @@ def definir_enfrentamientos_octavos(equipos_clasificados):
                 if contador == pos:
                     return (eq[0], eq[1])
         return ("", "")
-    # Definir los emparejamientos base según tabla 12.5
+
     enfrentamientos_alias = [
         (1, "2A", "2C"),
         (2, "1D", contrario_1D),
@@ -196,7 +191,6 @@ def definir_enfrentamientos_octavos(equipos_clasificados):
         (7, "2B", "2F"),
         (8, "1A", contrario_1A)
     ]
-    # Resolver los alias por los equipos reales
     resultado = []
     for id_partido, alias1, alias2 in enfrentamientos_alias:
         id1, pais1 = buscar_equipo(alias1)
@@ -204,6 +198,8 @@ def definir_enfrentamientos_octavos(equipos_clasificados):
         if id2 != "":
             resultado.append((id_partido, id1, pais1, id2, pais2))
     return resultado
+
+
 def ultima_fecha_jornada():
     conn = conectar()
     cursor = conn.cursor()
@@ -234,9 +230,12 @@ def ultima_fecha_jornada():
     
     return resultado[0] if resultado else 1
 
+
+# 🔧 CORREGIDO: ahora usa asignar funciones con penales y flujo actualizado
 def cerrar_jornada():
     from tkinter import messagebox
     import traceback
+    from controllers.pool import asignar_cuartos, asignar_semifinales, asignar_final, asignar_tercer_puesto
     
     conn = conectar()
     cursor = conn.cursor()
@@ -249,8 +248,8 @@ def cerrar_jornada():
         return 1
     
     jornada_actual = result[0]
-    
     nueva_jornada = jornada_actual + 1
+
     cursor.execute("""
         UPDATE estado_torneo 
         SET jornada_actual = ?, 
@@ -258,57 +257,40 @@ def cerrar_jornada():
             fecha_ultima_actualizacion = CURRENT_TIMESTAMP
         WHERE id = 1
     """, (nueva_jornada, jornada_actual))
-    
     conn.commit()
     conn.close()
-    
-    if jornada_actual == 3:
-        try:
+
+    try:
+        if jornada_actual == 3:
             messagebox.showinfo("Info", "Generando octavos de final...")
             tabla_pos = tabla_posiciones_general()
-            
             equipos_clasificados = clasificados_eliminatoria(tabla_pos)
-            
             enfrentamientos_octavos = definir_enfrentamientos_octavos(equipos_clasificados)
-            
-            # Mostrar información de los enfrentamientos
-            info_enfrentamientos = "Enfrentamientos de Octavos:\n\n"
-            for enf in enfrentamientos_octavos:
-                info_enfrentamientos += f"Partido {enf[0]}: {enf[1]} vs {enf[3]}\n"
-            
-            messagebox.showinfo("Octavos Generados", info_enfrentamientos)
-            
             asignar_equipos_octavos(enfrentamientos_octavos)
             messagebox.showinfo("Éxito", "✅ Octavos de final asignados correctamente")
-            
-        except Exception as e:
-            error_msg = f"Error al generar octavos: {str(e)}\n\n{traceback.format_exc()}"
-            messagebox.showerror("Error", error_msg)
-        
-    elif jornada_actual == 4:
-        messagebox.showinfo("Info", "Generando cuartos de final...")
-        ganadores_octavos = obtener_ganadores_jornada(4)
-        enfrentamientos_cuartos = generar_enfrentamientos_cuartos(ganadores_octavos)
-        asignar_equipos_cuartos(enfrentamientos_cuartos)
-        messagebox.showinfo("Éxito", "✅ Cuartos de final asignados correctamente")
-        
-    elif jornada_actual == 5:
-        messagebox.showinfo("Info", "Generando semifinales...")
-        ganadores_cuartos = obtener_ganadores_jornada(5)
-        enfrentamientos_semifinales = generar_enfrentamientos_semifinales(ganadores_cuartos)
-        asignar_equipos_semifinales(enfrentamientos_semifinales)
-        messagebox.showinfo("Éxito", "✅ Semifinales asignadas correctamente")
-        
-    elif jornada_actual == 6:
-        messagebox.showinfo("Info", "Generando final y tercer puesto...")
-        ganadores_semifinales, perdedores_semifinales = obtener_ganadores_y_perdedores_jornada(6)
-        enfrentamiento_final = generar_enfrentamiento_final(ganadores_semifinales)
-        enfrentamiento_tercer_puesto = generar_enfrentamiento_tercer_puesto(perdedores_semifinales)
-        asignar_equipos_final(enfrentamiento_final)
-        asignar_equipos_tercer_puesto(enfrentamiento_tercer_puesto)
-        messagebox.showinfo("Éxito", "✅ Final y tercer puesto asignados correctamente")
+
+        elif jornada_actual == 4:
+            messagebox.showinfo("Info", "Generando cuartos de final...")
+            asignar_cuartos()
+            messagebox.showinfo("Éxito", "✅ Cuartos de final asignados correctamente (con penales)")
+
+        elif jornada_actual == 5:
+            messagebox.showinfo("Info", "Generando semifinales...")
+            asignar_semifinales()
+            messagebox.showinfo("Éxito", "✅ Semifinales asignadas correctamente (con penales)")
+
+        elif jornada_actual == 6:
+            messagebox.showinfo("Info", "Generando final y tercer puesto...")
+            asignar_tercer_puesto()
+            asignar_final()
+            messagebox.showinfo("Éxito", "✅ Final y tercer puesto asignados correctamente (con penales)")
+
+    except Exception as e:
+        error_msg = f"Error al cerrar jornada {jornada_actual}: {str(e)}\n\n{traceback.format_exc()}"
+        messagebox.showerror("Error", error_msg)
     
     return nueva_jornada
+
 
 def carga_completa_fechas():
     conn = conectar()
@@ -324,18 +306,14 @@ def carga_completa_fechas():
         fecha = fila[0]
         hora  = fila[1]
         datos_validos = True
-        if fecha is None:
+        if fecha is None or fecha == "":
             datos_validos = False
-        elif fecha == "":
+        if hora is None or hora == "":
             datos_validos = False
-
-        if hora is None:
-            datos_validos = False
-        elif hora == "":
-            datos_validos = False
-        if datos_validos == False:
+        if not datos_validos:
             return False
     return True
+
 
 def obtener_ids_partidos_jornada(jornada):
     if jornada == 1:
@@ -356,91 +334,91 @@ def obtener_ids_partidos_jornada(jornada):
         return [52]
     return []
 
+
 def asignar_equipos_octavos(enfrentamientos):
     from tkinter import messagebox
-    
     conn = conectar()
     cursor = conn.cursor()
-    
     ids_partidos = obtener_ids_partidos_jornada(4)
-    
     info_asignacion = "Asignando equipos a octavos:\n\n"
-    
     for i, (id_partido, id_equipo1, pais1, id_equipo2, pais2) in enumerate(enfrentamientos):
         if i < len(ids_partidos):
             id_partido_real = ids_partidos[i]
             info_asignacion += f"Partido {id_partido_real}: {id_equipo1} vs {id_equipo2}\n"
-            
             cursor.execute("""
                 UPDATE partido 
                 SET identificadorEquipoUno = ?, identificadorEquipoDos = ?
                 WHERE idPartido = ?
             """, (id_equipo1, id_equipo2, id_partido_real))
-            
-            # Verificar la actualización
-            cursor.execute("SELECT identificadorEquipoUno, identificadorEquipoDos FROM partido WHERE idPartido = ?", (id_partido_real,))
-            resultado = cursor.fetchone()
-            info_asignacion += f"  ✅ Actualizado: {resultado[0]} vs {resultado[1]}\n\n"
-    
     conn.commit()
     conn.close()
-    
     messagebox.showinfo("Asignación Completada", info_asignacion)
+
 
 def obtener_ganadores_jornada(jornada):
     conn = conectar()
     cursor = conn.cursor()
-    
     cursor.execute("""
         SELECT idPartido, identificadorEquipoUno, identificadorEquipoDos, 
                golesEquipoUno, golesEquipoDos
         FROM partido 
         WHERE jornada = ?
     """, (jornada,))
-    
     partidos = cursor.fetchall()
     ganadores = []
-    
     for partido in partidos:
         id_partido, equipo1, equipo2, goles1, goles2 = partido
-        
         if goles1 > goles2:
             ganadores.append(equipo1)
         elif goles2 > goles1:
             ganadores.append(equipo2)
         else:
-            ganadores.append(equipo1)
-    
+            penales = get_penales_por_partido(id_partido)
+            if penales:
+                p1, p2 = penales
+                ganador = equipo1 if p1 > p2 else equipo2
+                ganadores.append(ganador)
+            else:
+                ganadores.append(equipo1)
     conn.close()
     return ganadores
+
 
 def obtener_ganadores_y_perdedores_jornada(jornada):
     conn = conectar()
     cursor = conn.cursor()
-    
     cursor.execute("""
-        SELECT identificadorEquipoUno, identificadorEquipoDos, 
+        SELECT idPartido, identificadorEquipoUno, identificadorEquipoDos, 
                golesEquipoUno, golesEquipoDos
         FROM partido 
         WHERE jornada = ?
     """, (jornada,))
-    
     partidos = cursor.fetchall()
-    ganadores = []
-    perdedores = []
-    
+    ganadores, perdedores = [], []
     for partido in partidos:
-        equipo1, equipo2, goles1, goles2 = partido
-        
+        id_partido, equipo1, equipo2, goles1, goles2 = partido
         if goles1 > goles2:
             ganadores.append(equipo1)
             perdedores.append(equipo2)
-        else:
+        elif goles2 > goles1:
             ganadores.append(equipo2)
             perdedores.append(equipo1)
-    
+        else:
+            penales = get_penales_por_partido(id_partido)
+            if penales:
+                p1, p2 = penales
+                if p1 > p2:
+                    ganadores.append(equipo1)
+                    perdedores.append(equipo2)
+                else:
+                    ganadores.append(equipo2)
+                    perdedores.append(equipo1)
+            else:
+                ganadores.append(equipo1)
+                perdedores.append(equipo2)
     conn.close()
     return ganadores, perdedores
+
 
 def generar_enfrentamientos_cuartos(ganadores_octavos):
     enfrentamientos = [
@@ -451,6 +429,7 @@ def generar_enfrentamientos_cuartos(ganadores_octavos):
     ]
     return enfrentamientos
 
+
 def generar_enfrentamientos_semifinales(ganadores_cuartos):
     enfrentamientos = [
         (1, ganadores_cuartos[0], ganadores_cuartos[1]),
@@ -458,80 +437,10 @@ def generar_enfrentamientos_semifinales(ganadores_cuartos):
     ]
     return enfrentamientos
 
+
 def generar_enfrentamiento_final(ganadores_semifinales):
     return [(1, ganadores_semifinales[0], ganadores_semifinales[1])]
 
+
 def generar_enfrentamiento_tercer_puesto(perdedores_semifinales):
     return [(1, perdedores_semifinales[0], perdedores_semifinales[1])]
-
-def asignar_equipos_cuartos(enfrentamientos):
-    conn = conectar()
-    cursor = conn.cursor()
-    
-    ids_partidos = obtener_ids_partidos_jornada(5)
-    
-    for i, (id_partido, equipo1, equipo2) in enumerate(enfrentamientos):
-        if i < len(ids_partidos):
-            id_partido_real = ids_partidos[i]
-            cursor.execute("""
-                UPDATE partido 
-                SET identificadorEquipoUno = ?, identificadorEquipoDos = ?
-                WHERE idPartido = ?
-            """, (equipo1, equipo2, id_partido_real))
-    
-    conn.commit()
-    conn.close()
-
-def asignar_equipos_semifinales(enfrentamientos):
-    conn = conectar()
-    cursor = conn.cursor()
-    
-    ids_partidos = obtener_ids_partidos_jornada(6)
-    
-    for i, (id_partido, equipo1, equipo2) in enumerate(enfrentamientos):
-        if i < len(ids_partidos):
-            id_partido_real = ids_partidos[i]
-            cursor.execute("""
-                UPDATE partido 
-                SET identificadorEquipoUno = ?, identificadorEquipoDos = ?
-                WHERE idPartido = ?
-            """, (equipo1, equipo2, id_partido_real))
-    
-    conn.commit()
-    conn.close()
-
-def asignar_equipos_final(enfrentamientos):
-    conn = conectar()
-    cursor = conn.cursor()
-    
-    ids_partidos = obtener_ids_partidos_jornada(8)
-    
-    for i, (id_partido, equipo1, equipo2) in enumerate(enfrentamientos):
-        if i < len(ids_partidos):
-            id_partido_real = ids_partidos[i]
-            cursor.execute("""
-                UPDATE partido 
-                SET identificadorEquipoUno = ?, identificadorEquipoDos = ?
-                WHERE idPartido = ?
-            """, (equipo1, equipo2, id_partido_real))
-    
-    conn.commit()
-    conn.close()
-
-def asignar_equipos_tercer_puesto(enfrentamientos):
-    conn = conectar()
-    cursor = conn.cursor()
-    
-    ids_partidos = obtener_ids_partidos_jornada(7)
-    
-    for i, (id_partido, equipo1, equipo2) in enumerate(enfrentamientos):
-        if i < len(ids_partidos):
-            id_partido_real = ids_partidos[i]
-            cursor.execute("""
-                UPDATE partido 
-                SET identificadorEquipoUno = ?, identificadorEquipoDos = ?
-                WHERE idPartido = ?
-            """, (equipo1, equipo2, id_partido_real))
-    
-    conn.commit()
-    conn.close()

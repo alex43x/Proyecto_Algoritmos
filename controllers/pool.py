@@ -53,7 +53,27 @@ def crear_tablas():
         FOREIGN KEY (identificadorEquipoUno) REFERENCES equipos(identificador),
         FOREIGN KEY (identificadorEquipoDos) REFERENCES equipos(identificador)
     );
+
+
     """)
+        
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS penales (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            idPartido INTEGER NOT NULL UNIQUE,
+            golesEquipoUno INTEGER DEFAULT 0,
+            golesEquipoDos INTEGER DEFAULT 0,
+            FOREIGN KEY (idPartido) REFERENCES partido(idPartido)
+        );
+    """)
+
+    # Comprobación y actualización si las columnas eran antiguas
+    columnas = [c[1] for c in cursor.execute("PRAGMA table_info(penales);").fetchall()]
+    if "golesEquipoUno" not in columnas:
+        cursor.execute("ALTER TABLE penales ADD COLUMN golesEquipoUno INTEGER DEFAULT 0;")
+    if "golesEquipoDos" not in columnas:
+        cursor.execute("ALTER TABLE penales ADD COLUMN golesEquipoDos INTEGER DEFAULT 0;")
+
     conn.commit()
     conn.close()
     # Inserta los partidos predefinidos de las 3 jornadas de la fase de grupos

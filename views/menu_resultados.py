@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from controllers.partido import get_partidos, update_partido
+from controllers.penales import registrar_penales, get_penales_por_partido
 from utils import ultima_fecha_jornada, cerrar_jornada, carga_completa_fechas
 
 
@@ -14,7 +15,7 @@ def pantalla_resultados(ventana, volver_menu):
     # Verificar si todas las fechas están cargadas
     if not carga_completa_fechas():
         messagebox.showwarning(
-            "Calendario Incompleto", 
+            "Calendario Incompleto",
             "No se pueden registrar resultados hasta que todas las fechas y horas de los partidos estén cargadas.\n\n"
             "Por favor, completa primero el calendario en la Configuración del Torneo."
         )
@@ -24,7 +25,7 @@ def pantalla_resultados(ventana, volver_menu):
     # título principal
     tk.Label(
         ventana,
-        text="⚽ registro de resultados de los partidos",
+        text="⚽ Registro de Resultados de los Partidos",
         font=("Segoe UI", 18, "bold"),
         fg="#333333",
         bg="#f8f8f8"
@@ -33,10 +34,10 @@ def pantalla_resultados(ventana, volver_menu):
     # obtener jornada actual desde la tabla estado_torneo
     jornada_actual = ultima_fecha_jornada()
 
-    # Verificar si es la última jornada (jornada 8)
+    # Verificar si el torneo terminó
     if jornada_actual > 8:
         messagebox.showinfo(
-            "Torneo Finalizado", 
+            "Torneo Finalizado",
             "🏆 ¡El torneo ha finalizado! No hay más jornadas por jugar.\n\n"
             "Todas las jornadas han sido completadas."
         )
@@ -54,6 +55,10 @@ def pantalla_resultados(ventana, volver_menu):
         "amarillas1", "amarillas2",
         "rojas1", "rojas2"
     )
+
+    # Si estamos en fase eliminatoria (octavos en adelante)
+    if jornada_actual >= 5:
+        columnas += ("penales1", "penales2")
 
     tabla = ttk.Treeview(frame_tabla, columns=columnas, show="headings", height=18)
     tabla.pack(fill="both", expand=True)
@@ -73,9 +78,13 @@ def pantalla_resultados(ventana, volver_menu):
         "rojas2": "TR E2",
     }
 
+    if jornada_actual >= 5:
+        encabezados["penales1"] = "Penales E1"
+        encabezados["penales2"] = "Penales E2"
+
     for col in columnas:
         tabla.heading(col, text=encabezados[col])
-        tabla.column(col, anchor="center", width=90)
+        tabla.column(col, anchor="center", width=85)
 
     # obtener todos los partidos
     partidos = get_partidos()
@@ -83,29 +92,39 @@ def pantalla_resultados(ventana, volver_menu):
     # filtrar solo los de la jornada actual
     partidos_actual = [p for p in partidos if int(p[13]) == int(jornada_actual)]
 
-    # si no hay partidos para esa jornada, mostrar aviso y volver
+    # si no hay partidos para esa jornada
     if not partidos_actual:
         messagebox.showinfo("Información", "No hay más partidos en el torneo.")
         volver_menu(ventana)
         return
 
-    # cargar datos en la tabla - MOSTRAR "0" EN LUGAR DE VACÍO
+    # cargar datos en la tabla
     for p in partidos_actual:
+        # Solo buscar penales si es fase eliminatoria
+        penales = get_penales_por_partido(p[0]) if jornada_actual >= 5 else None
+
+        # Si no hay registro de penales, inicializamos en (0, 0)
+        if penales is None:
+            penales = (0, 0)
+
         valores = (
-            p[0],  # idPartido
-            p[3],  # equipo1_nombre
-            p[4],  # equipo2_nombre
-            p[13], # jornada
-            p[1],  # fecha
-            p[2],  # hora
-            p[7] if p[7] is not None else "0",  # golesEquipoUno (mostrar "0" si es None o 0)
-            p[8] if p[8] is not None else "0",  # golesEquipoDos (mostrar "0" si es None o 0)
-            p[9] if p[9] is not None else "0",  # tarjetasAmarillasEquipoUno
-            p[10] if p[10] is not None else "0", # tarjetasAmarillasEquipoDos
-            p[11] if p[11] is not None else "0", # tarjetasRojasEquipoUno
-            p[12] if p[12] is not None else "0"  # tarjetasRojasEquipoDos
+            p[0], p[3], p[4], p[13], p[1], p[2],
+            p[7] if p[7] is not None else "0",
+            p[8] if p[8] is not None else "0",
+            p[9] if p[9] is not None else "0",
+            p[10] if p[10] is not None else "0",
+            p[11] if p[11] is not None else "0",
+            p[12] if p[12] is not None else "0",
         )
+
+        if jornada_actual >= 5:
+            valores += (
+                str(penales[0]),
+                str(penales[1])
+            )
+
         tabla.insert("", "end", values=valores)
+
 
     # permitir edición de celdas numéricas
     def editar_celda(event):
@@ -132,171 +151,78 @@ def pantalla_resultados(ventana, volver_menu):
             tabla.item(item, values=valores)
             entry.destroy()
 
-        def destruir_entry(_=None):
-            # Guardar el valor antes de destruir el entry
-            guardar_editado()
-
         entry.bind("<Return>", guardar_editado)
-        entry.bind("<FocusOut>", destruir_entry)
+        entry.bind("<FocusOut>", guardar_editado)
 
     tabla.bind("<Double-1>", editar_celda)
 
-    # guardar resultados en la base de datos
+    # guardar resultados
     def guardar_resultados():
         filas = tabla.get_children()
         actualizados = 0
-        cambios_detectados = False
 
         for f in filas:
             valores = tabla.item(f, "values")
-            (
-                idPartido, _, _, _, _, _,
-                g1, g2, a1, a2, r1, r2
-            ) = valores
+            if jornada_actual < 5:
+                idPartido, _, _, _, _, _, g1, g2, a1, a2, r1, r2 = valores
+            else:
+                idPartido, _, _, _, _, _, g1, g2, a1, a2, r1, r2, p1, p2 = valores
 
-            # Verificar si hay al menos un campo con datos (no vacío)
-            tiene_datos = (g1.strip() or g2.strip() or a1.strip() or a2.strip() or r1.strip() or r2.strip())
-
-            if tiene_datos:
-                cambios_detectados = True
-                
-                # Verificar que los goles obligatorios estén completos si hay otros datos
-                tiene_goles = g1.strip() or g2.strip()
-                goles_incompletos = (g1.strip() and not g2.strip()) or (not g1.strip() and g2.strip())
-                
-                if tiene_goles and goles_incompletos:
-                    messagebox.showwarning(
-                        "Datos incompletos",
-                        f"El partido ID {idPartido} tiene datos incompletos.\n"
-                        "Si ingresas goles, debes completar los goles de ambos equipos."
-                    )
-                    return
-
-                try:
-                    # Convertir campos vacíos a 0, campos con texto a número
-                    datos = (
-                        int(g1) if g1.strip() else 0,
-                        int(g2) if g2.strip() else 0,
-                        int(a1) if a1.strip() else 0,
-                        int(a2) if a2.strip() else 0,
-                        int(r1) if r1.strip() else 0,
-                        int(r2) if r2.strip() else 0,
-                        int(idPartido)
-                    )
-                except ValueError:
-                    messagebox.showerror(
-                        "Error",
-                        f"Valores inválidos en el partido ID {idPartido}. Usa solo números."
-                    )
-                    return
-
+            try:
+                datos = (
+                    int(g1) if g1.strip() else 0,
+                    int(g2) if g2.strip() else 0,
+                    int(a1) if a1.strip() else 0,
+                    int(a2) if a2.strip() else 0,
+                    int(r1) if r1.strip() else 0,
+                    int(r2) if r2.strip() else 0,
+                    int(idPartido)
+                )
                 update_partido(datos)
+
+                if jornada_actual >= 5:
+                    registrar_penales(int(idPartido),
+                                      int(p1) if p1.strip() else 0,
+                                      int(p2) if p2.strip() else 0)
                 actualizados += 1
+            except ValueError:
+                messagebox.showerror("Error", f"Valores inválidos en el partido ID {idPartido}.")
+                return
 
         if actualizados > 0:
-            messagebox.showinfo("Cambios Guardados", f"Se actualizaron {actualizados} partido(s) correctamente ✅")
+            messagebox.showinfo("✅ Cambios Guardados", f"Se actualizaron {actualizados} partido(s).")
             pantalla_resultados(ventana, volver_menu)
-        elif cambios_detectados:
-            messagebox.showinfo("Sin cambios", "Se detectaron datos pero no se pudieron guardar debido a errores.")
         else:
-            messagebox.showinfo("Sin cambios", "No se ingresaron resultados.")
+            messagebox.showinfo("Sin cambios", "No se detectaron resultados nuevos.")
 
-    # función para cerrar jornada
+    # cerrar jornada
     def cerrar_jornada_accion():
-        """
-        Verifica que todos los partidos tengan resultados y cierra la jornada
-        """
-        # Verificar que todos los partidos de la jornada actual tengan al menos goles cargados
-        partidos_sin_resultados = []
-        partidos_con_datos_parciales = []
         filas = tabla.get_children()
-        
+        partidos_sin_resultado = []
+
         for f in filas:
             valores = tabla.item(f, "values")
-            idPartido, equipo1, equipo2, _, _, _, g1, g2, a1, a2, r1, r2 = valores
-            
-            # Verificar si faltan goles (campos obligatorios)
+            g1, g2 = valores[6], valores[7]
             if not g1.strip() or not g2.strip():
-                # Verificar si tiene otros datos pero le faltan goles
-                otros_datos = a1.strip() or a2.strip() or r1.strip() or r2.strip()
-                
-                if otros_datos:
-                    partidos_con_datos_parciales.append(f"{equipo1} vs {equipo2} (ID: {idPartido})")
-                else:
-                    partidos_sin_resultados.append(f"{equipo1} vs {equipo2} (ID: {idPartido})")
-        
-        if partidos_con_datos_parciales:
-            messagebox.showwarning(
-                "Datos incompletos", 
-                f"No puedes cerrar la jornada {jornada_actual}. \n"
-                f"Los siguientes partidos tienen tarjetas pero faltan goles:\n\n" +
-                "\n".join(partidos_con_datos_parciales) +
-                "\n\nPor favor, completa los goles de ambos equipos."
-            )
-            return
-            
-        if partidos_sin_resultados:
-            messagebox.showwarning(
-                "Jornada Incompleta", 
-                f"No puedes cerrar la jornada {jornada_actual}. \n"
-                f"Faltan resultados en los siguientes partidos:\n\n" +
-                "\n".join(partidos_sin_resultados) +
-                "\n\nTodos los partidos deben tener al menos los goles cargados."
-            )
-            return
-        
-        # Primero guardar todos los resultados para asegurar consistencia
-        filas = tabla.get_children()
-        for f in filas:
-            valores = tabla.item(f, "values")
-            (
-                idPartido, _, _, _, _, _,
-                g1, g2, a1, a2, r1, r2
-            ) = valores
+                partidos_sin_resultado.append(valores[1] + " vs " + valores[2])
 
-            if g1.strip() or g2.strip():
-                try:
-                    datos = (
-                        int(g1) if g1.strip() else 0,
-                        int(g2) if g2.strip() else 0,
-                        int(a1) if a1.strip() else 0,
-                        int(a2) if a2.strip() else 0,
-                        int(r1) if r1.strip() else 0,
-                        int(r2) if r2.strip() else 0,
-                        int(idPartido)
-                    )
-                    update_partido(datos)
-                except ValueError:
-                    messagebox.showerror(
-                        "Error",
-                        f"Valores inválidos en el partido ID {idPartido}. No se pudo cerrar la jornada."
-                    )
-                    return
-        
-        # Confirmar cierre de jornada
+        if partidos_sin_resultado:
+            messagebox.showwarning(
+                "Jornada Incompleta",
+                f"No puedes cerrar la jornada {jornada_actual}.\nFaltan resultados en:\n\n" +
+                "\n".join(partidos_sin_resultado)
+            )
+            return
+
         if messagebox.askyesno(
-            "Confirmar Cierre", 
-            f"¿Estás seguro de cerrar la Jornada {jornada_actual}?\n\n"
-            "Una vez cerrada, no podrás modificar los resultados.\n"
-            "Esta acción avanzará a la siguiente jornada."
+            "Confirmar Cierre",
+            f"¿Cerrar Jornada {jornada_actual}?\nEsta acción no se podrá deshacer."
         ):
-            try:
-                nueva_jornada = cerrar_jornada()
-                messagebox.showinfo(
-                    "Jornada Cerrada", 
-                    f"✅ Jornada {jornada_actual} cerrada exitosamente.\n"
-                    f"🏁 Ahora estás en la Jornada {nueva_jornada}"
-                )
-                # Recargar la pantalla para mostrar la nueva jornada
-                pantalla_resultados(ventana, volver_menu)
-            except Exception as e:
-                messagebox.showerror("Error", f"No se pudo cerrar la jornada: {str(e)}")
+            nueva_jornada = cerrar_jornada()
+            messagebox.showinfo("Jornada Cerrada", f"✅ Jornada {jornada_actual} cerrada.\nSiguiente: {nueva_jornada}")
+            pantalla_resultados(ventana, volver_menu)
 
-    # Función para mostrar información del final del torneo
-    def mostrar_final_torneo():
-        messagebox.showinfo("Final del Torneo", "¡Esta es la última jornada del torneo!")
-
-    # volver al menú
+    # volver
     def volver():
         volver_menu(ventana)
 
@@ -304,58 +230,37 @@ def pantalla_resultados(ventana, volver_menu):
     frame_botones = tk.Frame(ventana, bg="#f8f8f8")
     frame_botones.pack(pady=20)
 
-    btn_guardar = tk.Button(
-        frame_botones,
-        text="💾 Guardar Resultados",
-        font=("Segoe UI", 12),
-        bg="#68ab98",
-        fg="white",
-        width=20,
+    tk.Button(
+        frame_botones, text="💾 Guardar Resultados",
+        font=("Segoe UI", 12), bg="#68ab98", fg="white", width=20,
         command=guardar_resultados
-    )
-    btn_guardar.grid(row=0, column=0, padx=10)
+    ).grid(row=0, column=0, padx=10)
 
-    # Solo mostrar botón de cerrar jornada si no es la última jornada
     if jornada_actual < 8:
-        btn_cerrar_jornada = tk.Button(
-            frame_botones,
-            text="🏁 Cerrar Jornada",
-            font=("Segoe UI", 12),
-            bg="#e74c3c",
-            fg="white",
-            width=20,
+        tk.Button(
+            frame_botones, text="🏁 Cerrar Jornada",
+            font=("Segoe UI", 12), bg="#e74c3c", fg="white", width=20,
             command=cerrar_jornada_accion
-        )
-        btn_cerrar_jornada.grid(row=0, column=1, padx=10)
+        ).grid(row=0, column=1, padx=10)
     else:
-        # Para la última jornada, mostrar un botón especial
-        btn_final_torneo = tk.Button(
-            frame_botones,
-            text="🏆 Final del Torneo",
-            font=("Segoe UI", 12),
-            bg="#f39c12",
-            fg="white",
-            width=20,
+        def mostrar_final_torneo():
+            messagebox.showinfo("Final del Torneo", "¡Esta es la última jornada del torneo!")
+
+        tk.Button(
+            frame_botones, text="🏆 Final del Torneo",
+            font=("Segoe UI", 12), bg="#f39c12", fg="white", width=20,
             command=mostrar_final_torneo
-        )
-        btn_final_torneo.grid(row=0, column=1, padx=10)
+        ).grid(row=0, column=1, padx=10)
 
-    btn_volver = tk.Button(
-        frame_botones,
-        text="⬅ Volver al Menú",
-        font=("Segoe UI", 12),
-        bg="#68ab98",
-        fg="white",
-        width=20,
+    tk.Button(
+        frame_botones, text="⬅ Volver al Menú",
+        font=("Segoe UI", 12), bg="#68ab98", fg="white", width=20,
         command=volver
-    )
-    btn_volver.grid(row=0, column=2, padx=10)
+    ).grid(row=0, column=2, padx=10)
 
-    # pie de página
     tk.Label(
         ventana,
         text=f"Desarrollado por Sintax FC — Jornada {jornada_actual}",
         font=("Segoe UI", 9, "italic"),
-        fg="#666666",
-        bg="#f8f8f8"
+        fg="#666666", bg="#f8f8f8"
     ).pack(side="bottom", pady=5)

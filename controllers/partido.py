@@ -93,3 +93,23 @@ def get_partidos():
     partidos = cursor.fetchall()
     conn.close()
     return partidos
+
+def registrar_penales(id_partido, goles1, goles2, conexion):
+    cursor = conexion.cursor()
+    cursor.execute("""
+        INSERT INTO penales (idPartido, golesEquipo1, golesEquipo2)
+        VALUES (?, ?, ?)
+    """, (id_partido, goles1, goles2))
+    conexion.commit()
+
+
+def obtener_penales(id_partido, conexion):
+    cursor = conexion.cursor()
+    cursor.execute("SELECT golesEquipo1, golesEquipo2 FROM penales WHERE idPartido = ?", (id_partido,))
+    return cursor.fetchone()
+
+
+def existe_penales(id_partido, conexion):
+    cursor = conexion.cursor()
+    cursor.execute("SELECT COUNT(*) FROM penales WHERE idPartido = ?", (id_partido,))
+    return cursor.fetchone()[0] > 0
