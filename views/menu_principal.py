@@ -3,7 +3,6 @@ from tkinter import messagebox
 from views.menu_torneo import pantalla_configuracion
 from views.menu_resultados import pantalla_resultados
 from views.menu_informes import pantalla_informes
-
 from utils import carga_completa_fechas  # Importar la función
 
 
@@ -53,11 +52,19 @@ def menu_principal(ventana):
             return
         pantalla_resultados(ventana, volver_al_menu)
 
+    def abrir_emision_informes():
+        # Bloquear acceso si el calendario no está completo
+        if not carga_completa_fechas():
+            messagebox.showwarning(
+                "Calendario Incompleto", 
+                "No se puede acceder a la emisión de informes hasta que todas las fechas y horas de los partidos estén cargadas.\n\n"
+                "Por favor, completa primero el calendario en la Configuración del Torneo."
+            )
+            return
+        pantalla_informes(ventana, volver_al_menu)
+
     def volver_al_menu(v):
         menu_principal(v)
-
-    def abrir_emision_informes():
-        pantalla_informes(ventana, volver_al_menu)
         
     def salir_aplicacion():
         ventana.destroy()
