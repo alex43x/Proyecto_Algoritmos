@@ -144,6 +144,10 @@ def crear_partidos_fase_final():
 #que viene ya de definir_enfretamientos_octavos
 #dicha lista trae (id_partido, id1, pais1, id2, pais2)
 def asignar_octavos(enfrentamientos_octavos):
+    """
+    Asigna los equipos a los partidos de octavos en la base de datos (jornada 4).
+    Usa los enfrentamientos generados por definir_enfrentamientos_octavos().
+    """
     conn = conectar()
     cursor = conn.cursor()
     cursor.execute("""
@@ -153,19 +157,33 @@ def asignar_octavos(enfrentamientos_octavos):
         ORDER BY idPartido ASC;
     """)
     partidos_j4 = cursor.fetchall()
-    for i in range(len(partidos_j4)):
-        id_partido_bd = partidos_j4[i][0]
-        id1 = enfrentamientos_octavos[i][1]  # identificador del equipo 1
-        id2 = enfrentamientos_octavos[i][3]  # identificador del equipo 2
-
-        cursor.execute("""
-            UPDATE partido
-            SET identificadorEquipoUno = ?, identificadorEquipoDos = ?
-            WHERE idPartido = ? AND jornada = 4;
-        """, (id1, id2, id_partido_bd))
+    usados = []
+    indice = 0
+    for fila in partidos_j4:
+        if indice >= len(enfrentamientos_octavos):
+            break
+        id_partido_bd = fila[0]
+        id1 = enfrentamientos_octavos[indice][1]
+        id2 = enfrentamientos_octavos[indice][3]
+        # Verificar duplicados manualmente
+        repetido = False
+        for u in usados:
+            if u == id1 or u == id2:
+                repetido = True
+                print("Equipo repetido detectado:", u)
+                break
+        if not repetido:
+            usados.append(id1)
+            usados.append(id2)
+            cursor.execute("""
+                UPDATE partido
+                SET identificadorEquipoUno = ?, identificadorEquipoDos = ?
+                WHERE idPartido = ? AND jornada = 4;
+            """, (id1, id2, id_partido_bd))
+        indice += 1
     conn.commit()
     conn.close()
-    print("Equipos de octavos asignados correctamente en la jornada 4.")
+    print("Asignación de octavos completada sin duplicados.")
 #pongo extra ya que en update_partido_sin_jugar de controllers.partidos
 #pide equipos-fecha , pero en caso de las eliminatorias, el codigo debe asignar 
 #los enfrentamientos, entonces los detales y fecha deben poner el usuario.

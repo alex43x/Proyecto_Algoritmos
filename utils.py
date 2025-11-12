@@ -136,9 +136,16 @@ def clasificados_eliminatoria(tabla_pos):
     return equipos_clasificados
 
 def definir_enfrentamientos_octavos(equipos_clasificados):
+    """
+    Define los enfrentamientos de octavos de final según las combinaciones oficiales
+    de grupos de terceros (tablas 12.5 y 12.6).
+    Recibe una lista de equipos clasificados ordenada: [(id, pais), ...]
+    Retorna una lista de tuplas: (id_partido, id1, pais1, id2, pais2)
+    """
+    # Identificar los cuatro mejores terceros
     terceros = equipos_clasificados[-4:]
     combinacion = "".join(sorted([t[0][0] for t in terceros]))
-    
+    # Tabla de combinaciones válidas (según la UEFA)
     combinaciones_validas = [
         ("ABCD", "3C", "3D", "3A"),
         ("ABCE", "3C", "3A", "3B"),
@@ -156,7 +163,7 @@ def definir_enfrentamientos_octavos(equipos_clasificados):
         ("BDEF", "3E", "3D", "3B"),
         ("CDEF", "3C", "3D", "3F")
     ]
-    
+    # Determinar los contrarios de 1D, 1B y 1A según la combinación de terceros
     contrario_1D = ""
     contrario_1B = ""
     contrario_1A = ""
@@ -165,7 +172,7 @@ def definir_enfrentamientos_octavos(equipos_clasificados):
             contrario_1D = comb[1]
             contrario_1B = comb[2]
             contrario_1A = comb[3]
-    
+    # Buscar un equipo por su alias ("1A", "2B", "3C", etc.)
     def buscar_equipo(alias):
         if alias == "":
             return ("", "")
@@ -178,7 +185,7 @@ def definir_enfrentamientos_octavos(equipos_clasificados):
                 if contador == pos:
                     return (eq[0], eq[1])
         return ("", "")
-    
+    # Definir los emparejamientos base según tabla 12.5
     enfrentamientos_alias = [
         (1, "2A", "2C"),
         (2, "1D", contrario_1D),
@@ -189,7 +196,7 @@ def definir_enfrentamientos_octavos(equipos_clasificados):
         (7, "2B", "2F"),
         (8, "1A", contrario_1A)
     ]
-
+    # Resolver los alias por los equipos reales
     resultado = []
     for id_partido, alias1, alias2 in enfrentamientos_alias:
         id1, pais1 = buscar_equipo(alias1)
@@ -197,7 +204,6 @@ def definir_enfrentamientos_octavos(equipos_clasificados):
         if id2 != "":
             resultado.append((id_partido, id1, pais1, id2, pais2))
     return resultado
-
 def ultima_fecha_jornada():
     conn = conectar()
     cursor = conn.cursor()
