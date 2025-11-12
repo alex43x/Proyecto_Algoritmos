@@ -10,9 +10,10 @@ def insert_partido(datos):
             identificadorEquipoUno, identificadorEquipoDos,
             golesEquipoUno, golesEquipoDos,
             tarjetasAmarillasEquipoUno, tarjetasAmarillasEquipoDos,
-            tarjetasRojasEquipoUno, tarjetasRojasEquipoDos, jornada
+            tarjetasRojasEquipoUno, tarjetasRojasEquipoDos,
+            jornada, estadio
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, datos)
     conn.commit()
     conn.close()
@@ -47,11 +48,6 @@ def get_partido_sin_jugar():
     return partidos
 # LISTA CON TODOS LOS PARTIDOS Y SUS DATOS PRINCIPALES
 def get_partidos():
-    """
-    Devuelve una lista de tuplas con todos los campos de la tabla 'partido',
-    uniendo con 'equipos' para mostrar los nombres de los equipos.
-    Si aún no hay equipos asignados, muestra 'Sin asignar'.
-    """
     conn = conectar()
     cursor = conn.cursor()
     cursor.execute("""
@@ -69,28 +65,29 @@ def get_partidos():
             p.tarjetasAmarillasEquipoDos,
             p.tarjetasRojasEquipoUno,
             p.tarjetasRojasEquipoDos,
-            p.jornada
+            p.jornada,
+            COALESCE(p.estadio, '') AS estadio
         FROM partido p
         LEFT JOIN equipos e1 ON p.identificadorEquipoUno = e1.identificador
         LEFT JOIN equipos e2 ON p.identificadorEquipoDos = e2.identificador
-        ORDER BY p.jornada, p.idPartido
+        ORDER BY p.jornada, p.idPartido;
     """)
-    datos = cursor.fetchall()
+    partidos = cursor.fetchall()
     conn.close()
-    return datos
+    return partidos
 
 
 # ACTUALIZA FECHA Y HORA DE UN PARTIDO
-def update_partido_fecha(idPartido, fecha, hora):
+def update_partido_fecha(idPartido, fecha, hora, estadio):
     """
-    Actualiza la fecha y hora (TEXT) de un partido específico.
+    Actualiza la fecha, hora y estadio de un partido específico.
     """
     conn = conectar()
     cursor = conn.cursor()
     cursor.execute("""
         UPDATE partido 
-        SET fecha = ?, hora = ?
+        SET fecha = ?, hora = ?, estadio = ?
         WHERE idPartido = ?
-    """, (fecha, hora, idPartido))
+    """, (fecha, hora, estadio, idPartido))
     conn.commit()
     conn.close()

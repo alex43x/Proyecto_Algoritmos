@@ -5,7 +5,7 @@ def InformeUno(fecha):
     """
     Devuelve una lista de tuplas con los partidos a disputarse en una fecha dada.
     Cada tupla incluye:
-    (idPartido, fecha, equipo1, equipo2, jornada, fase, hora)
+    (idPartido, fecha, equipo1, equipo2, jornada, fase, hora, estadio)
     """
     conn = conectar()
     cursor = conn.cursor()
@@ -17,7 +17,8 @@ def InformeUno(fecha):
             e1.pais AS equipo1,
             e2.pais AS equipo2,
             p.jornada,
-            p.hora
+            p.hora,
+            p.estadio
         FROM partido p
         JOIN equipos e1 ON p.identificadorEquipoUno = e1.identificador
         JOIN equipos e2 ON p.identificadorEquipoDos = e2.identificador
@@ -26,7 +27,7 @@ def InformeUno(fecha):
     """, (fecha,))
 
     resultados = []
-    for idPartido, fecha_p, equipo1, equipo2, jornada, hora in cursor.fetchall():
+    for idPartido, fecha_p, equipo1, equipo2, jornada, hora, estadio in cursor.fetchall():
 
         if jornada in (1, 2, 3):
             fase = "Fase de grupos"
@@ -43,7 +44,7 @@ def InformeUno(fecha):
         else:
             fase = "Desconocida"
 
-        resultados.append((idPartido, fecha_p, equipo1, equipo2, jornada, fase, hora))
+        resultados.append((idPartido, fecha_p, equipo1, equipo2, jornada, fase, hora, estadio))
 
     conn.close()
     return resultados
@@ -166,14 +167,13 @@ def InformeTres(equipo_nombre, fecha):
         (equipo_nombre, fecha, lista_partidos, estado_final)
 
         lista_partidos = [
-            (fecha_partido, fase, equipo1, goles1, equipo2, goles2)
+            (fecha_partido, fase, equipo1, goles1, equipo2, goles2, estadio)
         ]
     """
 
     conn = conectar()
     cursor = conn.cursor()
 
-    # Obtener identificador del equipo
     cursor.execute("""
         SELECT identificador, grupo 
         FROM equipos 
@@ -187,7 +187,6 @@ def InformeTres(equipo_nombre, fecha):
 
     id_equipo = fila[0]
 
-    # PARTIDOS HASTA LA FECHA DADA
     cursor.execute("""
         SELECT 
             p.fecha,
@@ -195,7 +194,8 @@ def InformeTres(equipo_nombre, fecha):
             e1.pais AS equipo_uno,
             e2.pais AS equipo_dos,
             p.golesEquipoUno,
-            p.golesEquipoDos
+            p.golesEquipoDos,
+            p.estadio
         FROM partido p
         JOIN equipos e1 ON e1.identificador = p.identificadorEquipoUno
         JOIN equipos e2 ON e2.identificador = p.identificadorEquipoDos
@@ -213,10 +213,8 @@ def InformeTres(equipo_nombre, fecha):
     lista_partidos = []
     ultima_jornada = 1
 
-    # RECORRER PARTIDOS, ASIGNAR FASE, ARMAR LISTA
-    for fecha_p, jornada, eq1, eq2, g1, g2 in partidos_raw:
+    for fecha_p, jornada, eq1, eq2, g1, g2, estadio in partidos_raw:
 
-        # Fase según jornada
         if jornada in (1, 2, 3):
             fase = "Fase de Grupos"
         elif jornada == 4:
@@ -232,12 +230,11 @@ def InformeTres(equipo_nombre, fecha):
         else:
             fase = "Desconocida"
 
-        lista_partidos.append((fecha_p, fase, eq1, g1, eq2, g2))
+        lista_partidos.append((fecha_p, fase, eq1, g1, eq2, g2, estadio))
 
         if jornada > ultima_jornada:
             ultima_jornada = jornada
 
-    # ESTADO FINAL DEL EQUIPO SEGÚN ÚLTIMA JORNADA JUGADA HASTA ESA FECHA
     if ultima_jornada <= 3:
         estado_final = "En Fase de Grupos"
     elif ultima_jornada == 4:
@@ -249,16 +246,14 @@ def InformeTres(equipo_nombre, fecha):
     elif ultima_jornada == 7:
         estado_final = "En Tercer Puesto"
     elif ultima_jornada == 8:
-        # Si ya jugó la final antes de esa fecha, evaluar ganador
-        ult = lista_partidos[-1]
-        _, _, eq1f, g1f, eq2f, g2f = ult
-        ganador = eq1f if g1f > g2f else eq2f
+        ult_partido = lista_partidos[-1]
+        fecha_f, fase_f, eq1_f, g1_f, eq2_f, g2_f, estadio_f = ult_partido
+        ganador = eq1_f if g1_f > g2_f else eq2_f
         estado_final = "Campeón" if ganador == equipo_nombre else "Subcampeón"
     else:
         estado_final = "Participación desconocida"
 
     conn.close()
-
     return (equipo_nombre, fecha, lista_partidos, estado_final)
 
 def InformeCuatro(equipo_nombre, fecha_limite):
@@ -271,13 +266,12 @@ def InformeCuatro(equipo_nombre, fecha_limite):
         (equipo_nombre, fecha_limite, partido)
 
     donde partido =
-        (fecha, hora, equipo1, equipo2, jornada, fase)
+        (fecha, hora, equipo1, equipo2, jornada, fase, estadio)
     """
 
     conn = conectar()
     cursor = conn.cursor()
 
-    # Obtener identificador del equipo
     cursor.execute("""
         SELECT identificador
         FROM equipos
@@ -291,14 +285,14 @@ def InformeCuatro(equipo_nombre, fecha_limite):
 
     id_equipo = fila[0]
 
-    # Buscar el PRÓXIMO partido luego de la fecha dada
     cursor.execute("""
         SELECT
             p.fecha,
             p.hora,
             e1.pais AS equipo1,
             e2.pais AS equipo2,
-            p.jornada
+            p.jornada,
+            p.estadio
         FROM partido p
         JOIN equipos e1 ON e1.identificador = p.identificadorEquipoUno
         JOIN equipos e2 ON e2.identificador = p.identificadorEquipoDos
@@ -315,9 +309,8 @@ def InformeCuatro(equipo_nombre, fecha_limite):
     if not partido:
         return (equipo_nombre, fecha_limite, None)
 
-    fecha_p, hora, eq1, eq2, jornada = partido
+    fecha_p, hora, eq1, eq2, jornada, estadio = partido
 
-    # Determinar fase según jornada
     if jornada in (1, 2, 3):
         fase = "Fase de grupos"
     elif jornada == 4:
@@ -334,7 +327,7 @@ def InformeCuatro(equipo_nombre, fecha_limite):
         fase = "Desconocida"
 
     return (equipo_nombre, fecha_limite,
-            (fecha_p, hora, eq1, eq2, jornada, fase))
+            (fecha_p, hora, eq1, eq2, jornada, fase, estadio))
 
 
 def InformeCinco(fecha):

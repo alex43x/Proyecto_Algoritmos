@@ -5,7 +5,6 @@ import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     # Construye la ruta completa a la base de datos dentro de la carpeta "data"
 DB_PATH = os.path.join(BASE_DIR, "..", "data", "torneo.db")
-
 def conectar():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     return sqlite3.connect(DB_PATH)
@@ -37,7 +36,6 @@ def crear_tablas():
         grupo INTEGER NOT NULL,
         FOREIGN KEY (grupo) REFERENCES grupos(idGrupo)
     );
-
     CREATE TABLE IF NOT EXISTS partido (
         idPartido INTEGER PRIMARY KEY,
         fecha TEXT,
@@ -51,6 +49,7 @@ def crear_tablas():
         tarjetasRojasEquipoUno INTEGER NOT NULL,
         tarjetasRojasEquipoDos INTEGER NOT NULL,
         jornada INTEGER NOT NULL,
+        estadio TEXT,
         FOREIGN KEY (identificadorEquipoUno) REFERENCES equipos(identificador),
         FOREIGN KEY (identificadorEquipoDos) REFERENCES equipos(identificador)
     );
@@ -63,48 +62,48 @@ def crear_partidos_fase_grupos():
     cursor = conn.cursor()
     
     cursor.executescript("""
-    INSERT INTO partido (fecha, hora, identificadorEquipoUno, identificadorEquipoDos, golesEquipoUno, golesEquipoDos, tarjetasAmarillasEquipoUno, tarjetasAmarillasEquipoDos, tarjetasRojasEquipoUno, tarjetasRojasEquipoDos, jornada) VALUES
+    INSERT INTO partido (fecha, hora, estadio, identificadorEquipoUno, identificadorEquipoDos, golesEquipoUno, golesEquipoDos, tarjetasAmarillasEquipoUno, tarjetasAmarillasEquipoDos, tarjetasRojasEquipoUno, tarjetasRojasEquipoDos, jornada) VALUES
     -- Jornada 1
-    ('', '', 'A1', 'A2', 0, 0, 0, 0, 0, 0, 1),
-    ('', '', 'A3', 'A4', 0, 0, 0, 0, 0, 0, 1),
-    ('', '', 'B1', 'B2', 0, 0, 0, 0, 0, 0, 1),
-    ('', '', 'B3', 'B4', 0, 0, 0, 0, 0, 0, 1),
-    ('', '', 'C1', 'C2', 0, 0, 0, 0, 0, 0, 1),
-    ('', '', 'C3', 'C4', 0, 0, 0, 0, 0, 0, 1),
-    ('', '', 'D1', 'D2', 0, 0, 0, 0, 0, 0, 1),
-    ('', '', 'D3', 'D4', 0, 0, 0, 0, 0, 0, 1),
-    ('', '', 'E1', 'E2', 0, 0, 0, 0, 0, 0, 1),
-    ('', '', 'E3', 'E4', 0, 0, 0, 0, 0, 0, 1),
-    ('', '', 'F1', 'F2', 0, 0, 0, 0, 0, 0, 1),
-    ('', '', 'F3', 'F4', 0, 0, 0, 0, 0, 0, 1),
+    ('', '', 'A1', 'A2', 0, 0, 0, 0, 0, 0, 1, ''),
+    ('', '', 'A3', 'A4', 0, 0, 0, 0, 0, 0, 1, ''),
+    ('', '', 'B1', 'B2', 0, 0, 0, 0, 0, 0, 1, ''),
+    ('', '', 'B3', 'B4', 0, 0, 0, 0, 0, 0, 1, ''),
+    ('', '', 'C1', 'C2', 0, 0, 0, 0, 0, 0, 1, ''),
+    ('', '', 'C3', 'C4', 0, 0, 0, 0, 0, 0, 1, ''),
+    ('', '', 'D1', 'D2', 0, 0, 0, 0, 0, 0, 1, ''),
+    ('', '', 'D3', 'D4', 0, 0, 0, 0, 0, 0, 1, ''),
+    ('', '', 'E1', 'E2', 0, 0, 0, 0, 0, 0, 1, ''),
+    ('', '', 'E3', 'E4', 0, 0, 0, 0, 0, 0, 1, ''),
+    ('', '', 'F1', 'F2', 0, 0, 0, 0, 0, 0, 1, ''),
+    ('', '', 'F3', 'F4', 0, 0, 0, 0, 0, 0, 1, ''),
 
     -- Jornada 2
-    ('', '', 'A1', 'A3', 0, 0, 0, 0, 0, 0, 2),
-    ('', '', 'A4', 'A2', 0, 0, 0, 0, 0, 0, 2),
-    ('', '', 'B1', 'B3', 0, 0, 0, 0, 0, 0, 2),
-    ('', '', 'B4', 'B2', 0, 0, 0, 0, 0, 0, 2),
-    ('', '', 'C1', 'C3', 0, 0, 0, 0, 0, 0, 2),
-    ('', '', 'C4', 'C2', 0, 0, 0, 0, 0, 0, 2),
-    ('', '', 'D1', 'D3', 0, 0, 0, 0, 0, 0, 2),
-    ('', '', 'D4', 'D2', 0, 0, 0, 0, 0, 0, 2),
-    ('', '', 'E1', 'E3', 0, 0, 0, 0, 0, 0, 2),
-    ('', '', 'E4', 'E2', 0, 0, 0, 0, 0, 0, 2),
-    ('', '', 'F1', 'F3', 0, 0, 0, 0, 0, 0, 2),
-    ('', '', 'F4', 'F2', 0, 0, 0, 0, 0, 0, 2),
+    ('', '', 'A1', 'A3', 0, 0, 0, 0, 0, 0, 2, ''),
+    ('', '', 'A4', 'A2', 0, 0, 0, 0, 0, 0, 2, ''),
+    ('', '', 'B1', 'B3', 0, 0, 0, 0, 0, 0, 2, ''),
+    ('', '', 'B4', 'B2', 0, 0, 0, 0, 0, 0, 2, ''),
+    ('', '', 'C1', 'C3', 0, 0, 0, 0, 0, 0, 2, ''),
+    ('', '', 'C4', 'C2', 0, 0, 0, 0, 0, 0, 2, ''),
+    ('', '', 'D1', 'D3', 0, 0, 0, 0, 0, 0, 2, ''),
+    ('', '', 'D4', 'D2', 0, 0, 0, 0, 0, 0, 2, ''),
+    ('', '', 'E1', 'E3', 0, 0, 0, 0, 0, 0, 2, ''),
+    ('', '', 'E4', 'E2', 0, 0, 0, 0, 0, 0, 2, ''),
+    ('', '', 'F1', 'F3', 0, 0, 0, 0, 0, 0, 2, ''),
+    ('', '', 'F4', 'F2', 0, 0, 0, 0, 0, 0, 2, ''),
 
     -- Jornada 3
-    ('', '', 'A4', 'A1', 0, 0, 0, 0, 0, 0, 3),
-    ('', '', 'A2', 'A3', 0, 0, 0, 0, 0, 0, 3),
-    ('', '', 'B4', 'B1', 0, 0, 0, 0, 0, 0, 3),
-    ('', '', 'B2', 'B3', 0, 0, 0, 0, 0, 0, 3),
-    ('', '', 'C4', 'C1', 0, 0, 0, 0, 0, 0, 3),
-    ('', '', 'C2', 'C3', 0, 0, 0, 0, 0, 0, 3),
-    ('', '', 'D4', 'D1', 0, 0, 0, 0, 0, 0, 3),
-    ('', '', 'D2', 'D3', 0, 0, 0, 0, 0, 0, 3),
-    ('', '', 'E4', 'E1', 0, 0, 0, 0, 0, 0, 3),
-    ('', '', 'E2', 'E3', 0, 0, 0, 0, 0, 0, 3),
-    ('', '', 'F4', 'F1', 0, 0, 0, 0, 0, 0, 3),
-    ('', '', 'F2', 'F3', 0, 0, 0, 0, 0, 0, 3);
+    ('', '', 'A4', 'A1', 0, 0, 0, 0, 0, 0, 3, ''),
+    ('', '', 'A2', 'A3', 0, 0, 0, 0, 0, 0, 3, ''),
+    ('', '', 'B4', 'B1', 0, 0, 0, 0, 0, 0, 3, ''),
+    ('', '', 'B2', 'B3', 0, 0, 0, 0, 0, 0, 3, ''),
+    ('', '', 'C4', 'C1', 0, 0, 0, 0, 0, 0, 3, ''),
+    ('', '', 'C2', 'C3', 0, 0, 0, 0, 0, 0, 3, ''),
+    ('', '', 'D4', 'D1', 0, 0, 0, 0, 0, 0, 3, ''),
+    ('', '', 'D2', 'D3', 0, 0, 0, 0, 0, 0, 3, ''),
+    ('', '', 'E4', 'E1', 0, 0, 0, 0, 0, 0, 3, ''),
+    ('', '', 'E2', 'E3', 0, 0, 0, 0, 0, 0, 3, ''),
+    ('', '', 'F4', 'F1', 0, 0, 0, 0, 0, 0, 3, ''),
+    ('', '', 'F2', 'F3', 0, 0, 0, 0, 0, 0, 3, '');
     """)
     
     conn.commit()
@@ -117,26 +116,26 @@ def crear_partidos_fase_final():
     cursor.executescript("""
     INSERT INTO partido (fecha, hora, identificadorEquipoUno, identificadorEquipoDos, golesEquipoUno, golesEquipoDos, tarjetasAmarillasEquipoUno, tarjetasAmarillasEquipoDos, tarjetasRojasEquipoUno, tarjetasRojasEquipoDos, jornada) VALUES
     -- Octavos de Final/8 PARTIDOS/J4
-    ('', '', '', '', 0, 0, 0, 0, 0, 0, 4),
-    ('', '', '', '', 0, 0, 0, 0, 0, 0, 4),
-    ('', '', '', '', 0, 0, 0, 0, 0, 0, 4),
-    ('', '', '', '', 0, 0, 0, 0, 0, 0, 4),
-    ('', '', '', '', 0, 0, 0, 0, 0, 0, 4),
-    ('', '', '', '', 0, 0, 0, 0, 0, 0, 4),
-    ('', '', '', '', 0, 0, 0, 0, 0, 0, 4),
-    ('', '', '', '', 0, 0, 0, 0, 0, 0, 4),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 4, ''),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 4, ''),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 4, ''),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 4, ''),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 4, ''),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 4, ''),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 4, ''),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 4, ''),
     --Cuartos de Final/4 PARTIDOS/J5
-    ('', '', '', '', 0, 0, 0, 0, 0, 0, 5),
-    ('', '', '', '', 0, 0, 0, 0, 0, 0, 5),
-    ('', '', '', '', 0, 0, 0, 0, 0, 0, 5),
-    ('', '', '', '', 0, 0, 0, 0, 0, 0, 5),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 5, ''),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 5, ''),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 5, ''),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 5, ''),
     --Semifinal/2 PARTIDOS/J6 
-    ('', '', '', '', 0, 0, 0, 0, 0, 0, 6),
-    ('', '', '', '', 0, 0, 0, 0, 0, 0, 6),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 6, ''),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 6, ''),
     --3er Puesto /1 PARTIDO/J7
-    ('', '', '', '', 0, 0, 0, 0, 0, 0, 7),
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 7, ''),
     --Final /1 PARTIDO/J8
-    ('', '', '', '', 0, 0, 0, 0, 0, 0, 8);
+    ('', '', '', '', 0, 0, 0, 0, 0, 0, 8, '');
     """)
     conn.commit()
     conn.close()
@@ -192,21 +191,21 @@ def actualizar_fechas_eliminatorias(jornada):
     conn = conectar()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT idPartido, fecha, hora
+        SELECT idPartido, fecha, hora, estadio
         FROM partido
         WHERE jornada = ?
         ORDER BY idPartido ASC;
     """, (jornada,))
     partidos = cursor.fetchall()
-    for id_partido, fecha, hora in partidos:
+    for id_partido, fecha, hora, estadio in partidos:
         cursor.execute("""
             UPDATE partido
-            SET fecha = ?, hora = ?
+            SET fecha = ?, hora = ?, estadio = ?
             WHERE idPartido = ? AND jornada = ?;
-        """, (fecha, hora, id_partido, jornada))
+        """, (fecha, hora, estadio, id_partido, jornada))
     conn.commit()
     conn.close()
-    print(f"Fechas y horas actualizadas correctamente para la jornada {jornada}.")
+    print(f"Fechas, horas y estadios actualizadas correctamente para la jornada {jornada}.")
 def actualizar_detalles_eliminatorias(jornada):
     conn = conectar()
     cursor = conn.cursor()
