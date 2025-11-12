@@ -17,6 +17,7 @@ def insert_partido(datos):
     """, datos)
     conn.commit()
     conn.close()
+
 # ACTUALIZAR PARTIDO COMPLETO (GOLES, TARJETAS)
 def update_partido(datos):
     conn = conectar()
@@ -33,6 +34,22 @@ def update_partido(datos):
     """, datos)
     conn.commit()
     conn.close()
+
+# ACTUALIZAR FECHA, HORA Y ESTADIO DE UN PARTIDO
+def update_partido_fecha(idPartido, fecha, hora, estadio):
+    """
+    Actualiza la fecha, hora y estadio de un partido.
+    """
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE partido
+        SET fecha = ?, hora = ?, estadio = ?
+        WHERE idPartido = ?
+    """, (fecha, hora, estadio, idPartido))
+    conn.commit()
+    conn.close()
+
 # OBTENER PARTIDOS SIN JUGAR
 def get_partido_sin_jugar():
     """Devuelve los partidos (id, fecha, equipos) que aún no se han jugado."""
@@ -46,6 +63,7 @@ def get_partido_sin_jugar():
     partidos = cursor.fetchall()
     conn.close()
     return partidos
+
 # LISTA CON TODOS LOS PARTIDOS Y SUS DATOS PRINCIPALES
 def get_partidos():
     conn = conectar()
@@ -75,19 +93,3 @@ def get_partidos():
     partidos = cursor.fetchall()
     conn.close()
     return partidos
-
-
-# ACTUALIZA FECHA Y HORA DE UN PARTIDO
-def update_partido_fecha(idPartido, fecha, hora, estadio):
-    """
-    Actualiza la fecha, hora y estadio de un partido específico.
-    """
-    conn = conectar()
-    cursor = conn.cursor()
-    cursor.execute("""
-        UPDATE partido 
-        SET fecha = ?, hora = ?, estadio = ?
-        WHERE idPartido = ?
-    """, (fecha, hora, estadio, idPartido))
-    conn.commit()
-    conn.close()

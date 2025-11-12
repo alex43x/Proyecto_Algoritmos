@@ -62,7 +62,7 @@ def crear_partidos_fase_grupos():
     cursor = conn.cursor()
     
     cursor.executescript("""
-    INSERT INTO partido (fecha, hora, estadio, identificadorEquipoUno, identificadorEquipoDos, golesEquipoUno, golesEquipoDos, tarjetasAmarillasEquipoUno, tarjetasAmarillasEquipoDos, tarjetasRojasEquipoUno, tarjetasRojasEquipoDos, jornada) VALUES
+    INSERT INTO partido (fecha, hora, identificadorEquipoUno, identificadorEquipoDos, golesEquipoUno, golesEquipoDos, tarjetasAmarillasEquipoUno, tarjetasAmarillasEquipoDos, tarjetasRojasEquipoUno, tarjetasRojasEquipoDos, jornada, estadio) VALUES
     -- Jornada 1
     ('', '', 'A1', 'A2', 0, 0, 0, 0, 0, 0, 1, ''),
     ('', '', 'A3', 'A4', 0, 0, 0, 0, 0, 0, 1, ''),
@@ -114,7 +114,7 @@ def crear_partidos_fase_final():
     cursor = conn.cursor()
     
     cursor.executescript("""
-    INSERT INTO partido (fecha, hora, identificadorEquipoUno, identificadorEquipoDos, golesEquipoUno, golesEquipoDos, tarjetasAmarillasEquipoUno, tarjetasAmarillasEquipoDos, tarjetasRojasEquipoUno, tarjetasRojasEquipoDos, jornada) VALUES
+    INSERT INTO partido (fecha, hora, identificadorEquipoUno, identificadorEquipoDos, golesEquipoUno, golesEquipoDos, tarjetasAmarillasEquipoUno, tarjetasAmarillasEquipoDos, tarjetasRojasEquipoUno, tarjetasRojasEquipoDos, jornada, estadio) VALUES
     -- Octavos de Final/8 PARTIDOS/J4
     ('', '', '', '', 0, 0, 0, 0, 0, 0, 4, ''),
     ('', '', '', '', 0, 0, 0, 0, 0, 0, 4, ''),

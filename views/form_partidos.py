@@ -8,25 +8,23 @@ from utils import carga_completa_fechas  # Importar la función
 
 def form_partidos(ventana_padre, callback_actualizar=None):
     """
-    Abre una ventana para registrar o editar fechas y horas de los partidos.
+    Abre una ventana para registrar o editar fechas, horas y estadios de los partidos.
     """
     ventana_fechas = tk.Toplevel(ventana_padre)
     ventana_fechas.title("Registrar fechas de los partidos")
     ventana_fechas.state("zoomed")
     ventana_fechas.configure(bg="#f8f8f8")
 
-    # Centrar la ventana
     ventana_fechas.update_idletasks()
     w = 900
-    h = 650
+    h = 700
     x = (ventana_fechas.winfo_screenwidth() // 2) - (w // 2)
     y = (ventana_fechas.winfo_screenheight() // 2) - (h // 2)
     ventana_fechas.geometry(f"{w}x{h}+{x}+{y}")
 
-    # === TÍTULO ===
     tk.Label(
         ventana_fechas,
-        text="⚽ Asignar fecha y hora a los partidos",
+        text="⚽ Asignar fecha, hora y estadio a los partidos",
         font=("Segoe UI", 18, "bold"),
         bg="#f8f8f8",
         fg="#333",
@@ -44,9 +42,8 @@ def form_partidos(ventana_padre, callback_actualizar=None):
     ).pack(side="left", padx=(0, 10))
 
     partidos_todos = get_partidos()
-    jornadas = sorted({p[13] for p in partidos_todos})  # jornada está en índice 13
+    jornadas = sorted({int(p[13]) for p in partidos_todos if str(p[13]).isdigit()})
 
-    # Diccionario de nombres según el número de jornada
     descripciones = {
         1: "Fase de Grupos - Jornada 1",
         2: "Fase de Grupos - Jornada 2",
@@ -58,7 +55,6 @@ def form_partidos(ventana_padre, callback_actualizar=None):
         8: "Final"
     }
 
-    # Mostrar en el combobox el texto descriptivo
     valores_combo = [f"{j} - {descripciones.get(j, 'Jornada')}" for j in jornadas]
     combo_jornada = ttk.Combobox(frame_filtro, values=valores_combo, state="readonly", font=("Segoe UI", 11), width=35)
     combo_jornada.pack(side="left")
@@ -70,45 +66,52 @@ def form_partidos(ventana_padre, callback_actualizar=None):
     frame_tabla = tk.Frame(ventana_fechas, bg="white", bd=1, relief="solid")
     frame_tabla.pack(fill="both", expand=True, padx=30, pady=10)
 
-    columnas = ("idPartido", "equipo1", "equipo2", "jornada", "fecha", "hora")
+    columnas = ("idPartido", "equipo1", "equipo2", "jornada", "fecha", "hora", "estadio")
     tabla = ttk.Treeview(frame_tabla, columns=columnas, show="headings", height=20)
     tabla.pack(fill="both", expand=True)
 
-    # --- Encabezados ---
     encabezados = {
         "idPartido": "ID",
         "equipo1": "Equipo 1",
         "equipo2": "Equipo 2",
         "jornada": "Jornada",
         "fecha": "Fecha (YYYY-MM-DD)",
-        "hora": "Hora (HH:MM)"
+        "hora": "Hora (HH:MM)",
+        "estadio": "Estadio"
     }
+
+    # Configuración de columnas (ajuste solicitado)
+    tabla.column("idPartido", anchor="center", width=60)
+    tabla.column("equipo1", anchor="center", width=130)
+    tabla.column("equipo2", anchor="center", width=130)
+    tabla.column("jornada", anchor="center", width=100)
+    tabla.column("fecha", anchor="center", width=130)
+    tabla.column("hora", anchor="center", width=100)
+    tabla.column("estadio", anchor="center", width=300)
 
     for col in columnas:
         tabla.heading(col, text=encabezados[col])
-        tabla.column(col, anchor="center", width=130)
 
-    # Estilo más moderno para la tabla
     estilo = ttk.Style()
-    estilo.configure("Treeview.Heading", font=("Segoe UI", 11, "bold"), background="#1a493c")
+    estilo.configure("Treeview.Heading", font=("Segoe UI", 11, "bold"))
     estilo.configure("Treeview", font=("Segoe UI", 10), rowheight=25)
     estilo.map("Treeview", background=[("selected", "#c5e2da")])
 
     # ================= CARGAR DATOS =================
     def cargar_partidos_por_jornada(*_):
         tabla.delete(*tabla.get_children())
-        seleccion = combo_jornada.get().split(" - ")[0]  # Obtener solo el número
-        partidos = [p for p in partidos_todos if str(p[13]) == str(seleccion)]  # jornada en índice 13
-        
+        seleccion = combo_jornada.get().split(" - ")[0]
+        partidos = [p for p in partidos_todos if str(p[13]) == str(seleccion)]
+
         for p in partidos:
-            # Crear tupla con solo los campos necesarios (sin goles ni tarjetas)
             valores = (
                 p[0],  # idPartido
                 p[3],  # equipo1_nombre
                 p[4],  # equipo2_nombre
                 p[13], # jornada
-                p[1] if p[1] else "",  # fecha (índice 1)
-                p[2] if p[2] else ""   # hora (índice 2)
+                p[1] if p[1] else "",  # fecha
+                p[2] if p[2] else "",  # hora
+                p[14] if len(p) > 14 and p[14] else ""  # estadio
             )
             tabla.insert("", "end", values=valores)
 
@@ -116,20 +119,46 @@ def form_partidos(ventana_padre, callback_actualizar=None):
     if jornadas:
         cargar_partidos_por_jornada()
 
-    # ================= EDICIÓN EN LA TABLA =================
+    # ================= EDICIÓN =================
     def editar_celda(event):
-        # Verificar si ya está todo cargado
         if carga_completa_fechas():
-            messagebox.showinfo("Calendario Completo", "El calendario de partidos ya está completamente cargado y no se pueden realizar más modificaciones.")
+            messagebox.showinfo("Calendario Completo", "El calendario ya está completamente cargado.")
             return
-            
+
         item = tabla.identify_row(event.y)
         col = tabla.identify_column(event.x)
-        if not item or col not in ("#5", "#6"):  # Solo fecha (#5) y hora (#6)
+        if not item or col not in ("#5", "#6", "#7"):
             return
 
         col_index = int(col[1:]) - 1
         old_value = tabla.item(item, "values")[col_index]
+
+        if col == "#7":  # Edición del estadio
+            top = tk.Toplevel(ventana_fechas)
+            top.title("Seleccionar estadio")
+            tk.Label(top, text="Selecciona el estadio:", font=("Segoe UI", 11, "bold")).pack(pady=5)
+
+            combo_estadio = ttk.Combobox(top, state="readonly", font=("Segoe UI", 11), width=65)
+            combo_estadio["values"] = [
+                "Nacional Julio Martínez Prádanos - Santiago de Chile",
+                "Monumental David Arellano - Santiago de Chile",
+                "Claro Arena - San Carlos de Apoquindo, Las Condes",
+                "Santa Laura de la Universidad SEK - Santiago de Chile"
+            ]
+            combo_estadio.set(old_value if old_value else combo_estadio["values"][0])
+            combo_estadio.pack(pady=5)
+
+            def confirmar_estadio():
+                nuevo_estadio = combo_estadio.get()
+                valores = list(tabla.item(item, "values"))
+                valores[col_index] = nuevo_estadio
+                tabla.item(item, values=valores)
+                top.destroy()
+
+            ttk.Button(top, text="Confirmar", command=confirmar_estadio).pack(pady=5)
+            return
+
+        # Edición de fecha/hora
         entry = tk.Entry(frame_tabla, font=("Segoe UI", 11))
         entry.insert(0, old_value)
         entry.focus()
@@ -158,7 +187,7 @@ def form_partidos(ventana_padre, callback_actualizar=None):
     # ================= VALIDACIONES =================
     def validar_fecha(fecha):
         if not fecha.strip():
-            return True  # Campo vacío es válido
+            return True
         if not re.match(r"^\d{4}-\d{1,2}-\d{1,2}$", fecha):
             return False
         try:
@@ -170,7 +199,7 @@ def form_partidos(ventana_padre, callback_actualizar=None):
 
     def validar_hora(hora):
         if not hora.strip():
-            return True  # Campo vacío es válido
+            return True
         if not re.match(r"^\d{1,2}:\d{2}$", hora):
             return False
         h, m = map(int, hora.split(":"))
@@ -178,53 +207,45 @@ def form_partidos(ventana_padre, callback_actualizar=None):
 
     # ================= GUARDAR CAMBIOS =================
     def guardar_fechas():
-        # Verificar si ya está todo cargado
         if carga_completa_fechas():
-            messagebox.showinfo("Calendario Completo", "El calendario de partidos ya está completamente cargado. No se pueden realizar más modificaciones.")
+            messagebox.showinfo("Calendario Completo", "El calendario de partidos ya está completamente cargado.")
             return
-            
+
         filas = tabla.get_children()
         cambios = 0
         errores = []
 
         for f in filas:
             valores = tabla.item(f, "values")
-            idp, equipo1, equipo2, jornada, fecha, hora = valores
+            idp, equipo1, equipo2, jornada, fecha, hora, estadio = valores
 
-            # Validar formato de fecha y hora
             if fecha.strip() and not validar_fecha(fecha):
                 errores.append(f"Partido {equipo1} vs {equipo2}: Fecha inválida '{fecha}'. Usa YYYY-MM-DD.")
                 continue
-                
+
             if hora.strip() and not validar_hora(hora):
                 errores.append(f"Partido {equipo1} vs {equipo2}: Hora inválida '{hora}'. Usa HH:MM.")
                 continue
 
-            # Solo actualizar si al menos uno de los campos tiene valor
-            if fecha.strip() or hora.strip():
+            # Solo actualizar si hay al menos uno de los campos cargados
+            if fecha.strip() or hora.strip() or estadio.strip():
                 try:
-                    # Convertir campos vacíos a None para la base de datos
                     fecha_db = fecha.strip() if fecha.strip() else None
                     hora_db = hora.strip() if hora.strip() else None
-                    
-                    print(f"Actualizando partido {idp}: fecha='{fecha_db}', hora='{hora_db}'")  # Debug
-                    
-                    update_partido_fecha(idp, fecha_db, hora_db)
+                    estadio_db = estadio.strip() if estadio.strip() else None
+
+                    print(f"Actualizando partido {idp}: fecha='{fecha_db}', hora='{hora_db}', estadio='{estadio_db}'")
+
+                    update_partido_fecha(idp, fecha_db, hora_db, estadio_db)
                     cambios += 1
-                    
+
                 except Exception as e:
                     errores.append(f"Error al guardar partido {idp}: {str(e)}")
 
-        # Mostrar resultados
         if errores:
-            messagebox.showerror(
-                "Errores al guardar", 
-                f"Se encontraron {len(errores)} error(es):\n\n" + "\n".join(errores[:5]) + 
-                ("\n\n...y más errores." if len(errores) > 5 else "")
-            )
+            messagebox.showerror("Errores al guardar", "\n".join(errores[:5]))
         elif cambios > 0:
-            messagebox.showinfo("Cambios Guardados", f"Fechas de {cambios} partido(s) guardadas correctamente ✅")
-            # Llamar al callback para actualizar el estado del botón en el menú principal
+            messagebox.showinfo("Cambios Guardados", f"Fechas, horas y estadios de {cambios} partido(s) guardadas correctamente ✅")
             if callback_actualizar:
                 callback_actualizar()
             ventana_fechas.destroy()
@@ -235,19 +256,18 @@ def form_partidos(ventana_padre, callback_actualizar=None):
     frame_botones = tk.Frame(ventana_fechas, bg="#f8f8f8")
     frame_botones.pack(pady=15)
 
-    # Verificar estado inicial para deshabilitar botón si ya está completo
     estado_boton = "normal"
     if carga_completa_fechas():
         estado_boton = "disabled"
 
     btn_guardar = tk.Button(
         frame_botones,
-        text="Guardar Fechas",
+        text="Guardar Fechas y Estadios",
         font=("Segoe UI", 12, "bold"),
         bg="#68ab98",
         fg="white",
         command=guardar_fechas,
-        width=18,
+        width=20,
         relief="flat",
         padx=5,
         pady=5,
