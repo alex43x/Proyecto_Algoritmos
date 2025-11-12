@@ -1,4 +1,0 @@
-from utils import tabla_posiciones_general
-from utils import definir_enfrentamientos_octavos
-tabla_posiciones_general()
-definir_enfrentamientos_octavos()
