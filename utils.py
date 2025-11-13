@@ -245,7 +245,6 @@ def ultima_fecha_jornada():
 def cerrar_jornada():
     from tkinter import messagebox
     import traceback
-    from controllers.pool import asignar_cuartos, asignar_semifinales, asignar_final, asignar_tercer_puesto
     
     conn = conectar()
     cursor = conn.cursor()
@@ -281,18 +280,18 @@ def cerrar_jornada():
 
         elif jornada_actual == 4:
             messagebox.showinfo("Info", "Generando cuartos de final...")
-            asignar_cuartos()
+            asignar_equipos_cuartos()  # 🔧 CORREGIDO: nombre de función
             messagebox.showinfo("Éxito", "✅ Cuartos de final asignados correctamente (con penales)")
 
         elif jornada_actual == 5:
             messagebox.showinfo("Info", "Generando semifinales...")
-            asignar_semifinales()
+            asignar_equipos_semifinales()  # 🔧 CORREGIDO: nombre de función
             messagebox.showinfo("Éxito", "✅ Semifinales asignadas correctamente (con penales)")
 
         elif jornada_actual == 6:
             messagebox.showinfo("Info", "Generando final y tercer puesto...")
-            asignar_tercer_puesto()
-            asignar_final()
+            asignar_equipos_tercer_puesto()  # 🔧 CORREGIDO: nombre de función
+            asignar_equipos_final()  # 🔧 CORREGIDO: nombre de función
             messagebox.showinfo("Éxito", "✅ Final y tercer puesto asignados correctamente (con penales)")
 
     except Exception as e:
@@ -383,12 +382,14 @@ def obtener_ganadores_jornada(jornada):
         elif goles2 > goles1:
             ganadores.append(equipo2)
         else:
+            # 🔧 AGREGADO: Verificación de penales para octavos
             penales = get_penales_por_partido(id_partido)
             if penales:
                 p1, p2 = penales
                 ganador = equipo1 if p1 > p2 else equipo2
                 ganadores.append(ganador)
             else:
+                # Si no hay penales, se asume el primer equipo como ganador (esto podría mejorarse)
                 ganadores.append(equipo1)
     conn.close()
     return ganadores
@@ -414,6 +415,7 @@ def obtener_ganadores_y_perdedores_jornada(jornada):
             ganadores.append(equipo2)
             perdedores.append(equipo1)
         else:
+            # 🔧 AGREGADO: Verificación de penales para octavos
             penales = get_penales_por_partido(id_partido)
             if penales:
                 p1, p2 = penales
@@ -424,6 +426,7 @@ def obtener_ganadores_y_perdedores_jornada(jornada):
                     ganadores.append(equipo2)
                     perdedores.append(equipo1)
             else:
+                # Si no hay penales, se asume el primer equipo como ganador
                 ganadores.append(equipo1)
                 perdedores.append(equipo2)
     conn.close()
@@ -454,3 +457,133 @@ def generar_enfrentamiento_final(ganadores_semifinales):
 
 def generar_enfrentamiento_tercer_puesto(perdedores_semifinales):
     return [(1, perdedores_semifinales[0], perdedores_semifinales[1])]
+
+
+# 🔧 CORREGIDO: Funciones con nombres correctos y con verificación de penales
+
+def asignar_equipos_cuartos():
+    from tkinter import messagebox
+    conn = conectar()
+    cursor = conn.cursor()
+    
+    # Obtener ganadores de octavos con verificación de penales
+    ganadores_octavos = obtener_ganadores_jornada(4)
+    
+    if len(ganadores_octavos) != 8:
+        messagebox.showerror("Error", f"No hay suficientes ganadores en octavos: {len(ganadores_octavos)}")
+        conn.close()
+        return
+    
+    enfrentamientos = generar_enfrentamientos_cuartos(ganadores_octavos)
+    ids_partidos = obtener_ids_partidos_jornada(5)
+    
+    info_asignacion = "Asignando equipos a cuartos:\n\n"
+    for i, (_, equipo1, equipo2) in enumerate(enfrentamientos):
+        if i < len(ids_partidos):
+            id_partido_real = ids_partidos[i]
+            info_asignacion += f"Partido {id_partido_real}: {equipo1} vs {equipo2}\n"
+            cursor.execute("""
+                UPDATE partido 
+                SET identificadorEquipoUno = ?, identificadorEquipoDos = ?
+                WHERE idPartido = ?
+            """, (equipo1, equipo2, id_partido_real))
+    
+    conn.commit()
+    conn.close()
+    messagebox.showinfo("Asignación Completada", info_asignacion)
+
+
+def asignar_equipos_semifinales():
+    from tkinter import messagebox
+    conn = conectar()
+    cursor = conn.cursor()
+    
+    # Obtener ganadores de cuartos con verificación de penales
+    ganadores_cuartos = obtener_ganadores_jornada(5)
+    
+    if len(ganadores_cuartos) != 4:
+        messagebox.showerror("Error", f"No hay suficientes ganadores en cuartos: {len(ganadores_cuartos)}")
+        conn.close()
+        return
+    
+    enfrentamientos = generar_enfrentamientos_semifinales(ganadores_cuartos)
+    ids_partidos = obtener_ids_partidos_jornada(6)
+    
+    info_asignacion = "Asignando equipos a semifinales:\n\n"
+    for i, (_, equipo1, equipo2) in enumerate(enfrentamientos):
+        if i < len(ids_partidos):
+            id_partido_real = ids_partidos[i]
+            info_asignacion += f"Partido {id_partido_real}: {equipo1} vs {equipo2}\n"
+            cursor.execute("""
+                UPDATE partido 
+                SET identificadorEquipoUno = ?, identificadorEquipoDos = ?
+                WHERE idPartido = ?
+            """, (equipo1, equipo2, id_partido_real))
+    
+    conn.commit()
+    conn.close()
+    messagebox.showinfo("Asignación Completada", info_asignacion)
+
+
+def asignar_equipos_final():
+    from tkinter import messagebox
+    conn = conectar()
+    cursor = conn.cursor()
+    
+    # Obtener ganadores de semifinales con verificación de penales
+    ganadores_semifinales = obtener_ganadores_jornada(6)
+    
+    if len(ganadores_semifinales) != 2:
+        messagebox.showerror("Error", f"No hay suficientes ganadores en semifinales: {len(ganadores_semifinales)}")
+        conn.close()
+        return
+    
+    enfrentamientos = generar_enfrentamiento_final(ganadores_semifinales)
+    ids_partidos = obtener_ids_partidos_jornada(8)  # Jornada 8 para la final
+    
+    info_asignacion = "Asignando equipos a la final:\n\n"
+    for i, (_, equipo1, equipo2) in enumerate(enfrentamientos):
+        if i < len(ids_partidos):
+            id_partido_real = ids_partidos[i]
+            info_asignacion += f"Partido {id_partido_real}: {equipo1} vs {equipo2}\n"
+            cursor.execute("""
+                UPDATE partido 
+                SET identificadorEquipoUno = ?, identificadorEquipoDos = ?
+                WHERE idPartido = ?
+            """, (equipo1, equipo2, id_partido_real))
+    
+    conn.commit()
+    conn.close()
+    messagebox.showinfo("Asignación Completada", info_asignacion)
+
+
+def asignar_equipos_tercer_puesto():
+    from tkinter import messagebox
+    conn = conectar()
+    cursor = conn.cursor()
+    
+    # Obtener perdedores de semifinales
+    _, perdedores_semifinales = obtener_ganadores_y_perdedores_jornada(6)
+    
+    if len(perdedores_semifinales) != 2:
+        messagebox.showerror("Error", f"No hay suficientes perdedores en semifinales: {len(perdedores_semifinales)}")
+        conn.close()
+        return
+    
+    enfrentamientos = generar_enfrentamiento_tercer_puesto(perdedores_semifinales)
+    ids_partidos = obtener_ids_partidos_jornada(7)  # Jornada 7 para tercer puesto
+    
+    info_asignacion = "Asignando equipos al partido por tercer puesto:\n\n"
+    for i, (_, equipo1, equipo2) in enumerate(enfrentamientos):
+        if i < len(ids_partidos):
+            id_partido_real = ids_partidos[i]
+            info_asignacion += f"Partido {id_partido_real}: {equipo1} vs {equipo2}\n"
+            cursor.execute("""
+                UPDATE partido 
+                SET identificadorEquipoUno = ?, identificadorEquipoDos = ?
+                WHERE idPartido = ?
+            """, (equipo1, equipo2, id_partido_real))
+    
+    conn.commit()
+    conn.close()
+    messagebox.showinfo("Asignación Completada", info_asignacion)

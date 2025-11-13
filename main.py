@@ -1,9 +1,6 @@
 import tkinter as tk
 from views.menu_principal import menu_principal
-from controllers.pool import crear_tablas,crear_partidos_fase_grupos,crear_partidos_fase_final
-from controllers.equipos import get_equipo
-from controllers.partido import get_partidos
-
+from controllers.pool import crear_tablas
 
 # MAIN
 def main():
@@ -19,4 +16,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
