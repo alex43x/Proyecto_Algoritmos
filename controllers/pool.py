@@ -129,6 +129,7 @@ def crear_partidos_fase_grupos():
     conn.commit()
     conn.close()
     print("Partidos de la fase de grupos creados exitosamente")
+    
 def crear_partidos_fase_final():
     conn = conectar()
     cursor = conn.cursor()

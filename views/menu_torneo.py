@@ -379,3 +379,60 @@ def pantalla_configuracion(ventana, volver_menu):
                     col = 0
                     row += 1
         mostrar_grupos_equipos()
+        
+    # pie de página mejorado - ZONA DE TÍTULOS 
+    footer_frame = tk.Frame(ventana, bg="#0f3b2f")
+    footer_frame.pack(side="bottom", fill="x", pady=10)
+
+    # línea separadora decorativa
+    separador = tk.Frame(
+        footer_frame, 
+        height=1, 
+        bg="#2a6d56",
+        relief="sunken"
+    )
+    separador.pack(fill="x", pady=(0, 8))
+
+    # información académica y de la aplicación
+    tk.Label(
+        footer_frame,
+        text="Algoritmos y Estructuras de Datos II • Sistema de Gestión de Torneos FIFA",
+        font=("Segoe UI", 9, "bold"),
+        bg="#0f3b2f",
+        fg="#68ab98"
+    ).pack(pady=(0, 3))
+
+    # obtener fecha y hora actual
+    fecha_actual = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    
+    tk.Label(
+        footer_frame,
+        text=f"Fecha y Hora: {fecha_actual}",
+        font=("Segoe UI", 8),
+        bg="#0f3b2f",
+        fg="#68ab98"
+    ).pack(pady=(0, 3))
+
+    # información de desarrollo
+    tk.Label(
+        footer_frame,
+        text="Desarrollado por Sintax FC • © 2025 • Versión 1.0",
+        font=("Segoe UI", 8, "italic"),
+        bg="#0f3b2f",
+        fg="#68ab98"
+    ).pack()
+
+    # función para actualizar la hora en tiempo real
+    def actualizar_hora():
+        nueva_fecha = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        for widget in footer_frame.winfo_children():
+            if isinstance(widget, tk.Label) and "Fecha y Hora:" in widget.cget("text"):
+                widget.config(text=f"Fecha y Hora: {nueva_fecha}")
+                break
+        ventana.after(1000, actualizar_hora)  # actualizar cada segundo
+
+    # iniciar la actualización de la hora
+    actualizar_hora()
+
+    # actualizar ventana
+    ventana.update_idletasks()

@@ -1,4 +1,5 @@
 import tkinter as tk
+import datetime
 from tkinter import ttk, messagebox
 from controllers.partido import get_partidos, update_partido
 from controllers.penales import registrar_penales, get_penales_por_partido
@@ -420,9 +421,59 @@ def pantalla_resultados(ventana, volver_menu):
             ).pack(side="bottom", pady=5)
 
     # pie de página con información de desarrollo y jornada actual
+    footer_frame = tk.Frame(ventana, bg="#0f3b2f")
+    footer_frame.pack(side="bottom", fill="x", pady=10)
+
+    # línea separadora decorativa
+    separador = tk.Frame(
+        footer_frame, 
+        height=1, 
+        bg="#2a6d56",
+        relief="sunken"
+    )
+    separador.pack(fill="x", pady=(0, 8))
+
+    # información académica y de la aplicación
     tk.Label(
-        ventana,
-        text=f"Desarrollado por Sintax FC — Jornada {jornada_actual}",
-        font=("Segoe UI", 9, "italic"),
-        fg="#666666", bg="#f8f8f8"
-    ).pack(side="bottom", pady=5)
+        footer_frame,
+        text="Algoritmos y Estructuras de Datos II • Sistema de Gestión de Torneos FIFA",
+        font=("Segoe UI", 9, "bold"),
+        bg="#0f3b2f",
+        fg="#68ab98"
+    ).pack(pady=(0, 3))
+
+    # obtener fecha y hora actual
+    fecha_actual = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    
+    tk.Label(
+        footer_frame,
+        text=f"Fecha y Hora: {fecha_actual}",
+        font=("Segoe UI", 8),
+        bg="#0f3b2f",
+        fg="#68ab98"
+    ).pack(pady=(0, 3))
+
+    # información de desarrollo
+    tk.Label(
+        footer_frame,
+        text=f"Desarrollado por Sintax FC • © 2025 • Versión 1.0 - Jornada {jornada_actual}",
+        font=("Segoe UI", 8, "italic"),
+        bg="#0f3b2f",
+        fg="#68ab98"
+    ).pack()
+
+    # función para actualizar la hora en tiempo real
+    def actualizar_hora():
+        nueva_fecha = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        for widget in footer_frame.winfo_children():
+            if isinstance(widget, tk.Label) and "Fecha y Hora:" in widget.cget("text"):
+                widget.config(text=f"Fecha y Hora: {nueva_fecha}")
+                break
+        ventana.after(1000, actualizar_hora)  # actualizar cada segundo
+
+    # iniciar la actualización de la hora
+    actualizar_hora()
+
+    # actualizar ventana
+    ventana.update_idletasks()
+    

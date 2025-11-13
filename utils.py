@@ -338,6 +338,11 @@ def carga_completa_fechas():
     """)
     registros = cursor.fetchall()
     conn.close()
+    
+    # si no hay partidos registrados, retornar false
+    if not registros:
+        return False
+        
     for fila in registros:
         fecha = fila[0]
         hora  = fila[1]
