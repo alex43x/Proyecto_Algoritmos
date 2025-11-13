@@ -3,7 +3,7 @@ from tkinter import messagebox
 from views.menu_torneo import pantalla_configuracion
 from views.menu_resultados import pantalla_resultados
 from views.menu_informes import pantalla_informes
-from utils import carga_completa_fechas  # Importar la función
+from utils import carga_completa_fechas  
 
 
 def menu_principal(ventana):

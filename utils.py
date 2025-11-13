@@ -1,8 +1,8 @@
 from controllers.pool import conectar
-import datetime
 from controllers.penales import get_penales_por_partido
 
 
+# genera la tabla de posiciones general del torneo considerando jornadas 1, 2 y 3
 def tabla_posiciones_general():
     conn = conectar()
     cursor = conn.cursor()
@@ -27,6 +27,7 @@ def tabla_posiciones_general():
     partidos = cursor.fetchall()
     conn.close()
     
+    # procesar cada partido para actualizar estadísticas
     for p in partidos:
         id_1 = p[0]
         id_2 = p[1]
@@ -37,6 +38,7 @@ def tabla_posiciones_general():
         roja_1 = p[6]
         roja_2 = p[7]
         
+        # buscar índices de los equipos en la tabla
         i1 = -1
         i2 = -1
         for k in range(len(tabla)):
@@ -45,19 +47,23 @@ def tabla_posiciones_general():
             if tabla[k][0] == id_2:
                 i2 = k
 
+        # actualizar goles a favor y en contra
         tabla[i1][5] += goles_1
         tabla[i1][6] += goles_2
         tabla[i2][5] += goles_2
         tabla[i2][6] += goles_1
         
+        # calcular diferencia de goles
         tabla[i1][4] = tabla[i1][5] - tabla[i1][6]
         tabla[i2][4] = tabla[i2][5] - tabla[i2][6]
         
+        # acumular tarjetas
         tabla[i1][7] += amar_1
         tabla[i1][8] += roja_1
         tabla[i2][7] += amar_2
         tabla[i2][8] += roja_2
         
+        # asignar puntos según resultado
         if goles_1 > goles_2:
             tabla[i1][3] += 3
         elif goles_2 > goles_1:
@@ -66,6 +72,7 @@ def tabla_posiciones_general():
             tabla[i1][3] += 1
             tabla[i2][3] += 1
     
+    # agrupar equipos por grupo para ordenamiento
     grupos = []
     for fila in tabla:
         g = fila[2]
@@ -73,12 +80,14 @@ def tabla_posiciones_general():
             grupos.append(g)
     tabla_final = []
 
+    # ordenar equipos dentro de cada grupo por puntos, diferencia de goles y goles a favor
     for g in grupos:
         sub = []
         for fila in tabla:
             if fila[2] == g:
                 sub.append(fila)
 
+        # algoritmo de ordenamiento burbuja
         m = len(sub)
         for a in range(m - 1):
             for b in range(m - 1 - a):
@@ -94,6 +103,7 @@ def tabla_posiciones_general():
                 if cambiar:
                     sub[b], sub[b+1] = sub[b+1], sub[b]
 
+        # agregar equipos ordenados a la tabla final
         for fila in sub:
             tabla_final.append(fila)
     
@@ -104,6 +114,7 @@ def tabla_posiciones_general():
     return salida
 
 
+# determina los equipos clasificados a octavos de final (primeros, segundos y mejores terceros)
 def clasificados_eliminatoria(tabla_pos):
     def ordenar_terceros(lista):
         n = len(lista)
@@ -113,6 +124,7 @@ def clasificados_eliminatoria(tabla_pos):
                     lista[j], lista[j + 1] = lista[j + 1], lista[j]
         return lista
     
+    # agrupar equipos por grupo
     grupos = {}
     for identificador, pais, puntos in tabla_pos:
         grupo = identificador[0]
@@ -123,6 +135,7 @@ def clasificados_eliminatoria(tabla_pos):
     equipos_clasificados = []
     terceros = []
     
+    # tomar primeros y segundos de cada grupo, y acumular terceros
     for grupo in grupos:
         primero = grupos[grupo][0]
         segundo = grupos[grupo][1]
@@ -131,6 +144,7 @@ def clasificados_eliminatoria(tabla_pos):
         tercero = grupos[grupo][2]
         terceros.append(tercero)
     
+    # ordenar terceros por puntos y tomar los 4 mejores
     terceros = ordenar_terceros(terceros)
     for p in range(4):
         clasificado_tercero = terceros[p]
@@ -138,11 +152,13 @@ def clasificados_eliminatoria(tabla_pos):
     
     return equipos_clasificados
 
+
+# define los enfrentamientos de octavos de final según el formato fifa
 def definir_enfrentamientos_octavos(equipos_clasificados):
     terceros = equipos_clasificados[-4:]
     combinacion = "".join(sorted([t[0][0] for t in terceros]))
 
-    # Combinaciones posibles según la FIFA (sin repeticiones)
+    # combinaciones posibles según la fifa (sin repeticiones)
     combinaciones_validas = [
         ("ABCD", "3C", "3D", "3A", "3B"),
         ("ABCE", "3C", "3A", "3B", "3E"),
@@ -166,6 +182,7 @@ def definir_enfrentamientos_octavos(equipos_clasificados):
     contrario_1A = ""
     contrario_1C = ""
 
+    # buscar la combinación válida correspondiente
     for comb in combinaciones_validas:
         if combinacion == comb[0]:
             contrario_1D = comb[1]
@@ -173,6 +190,7 @@ def definir_enfrentamientos_octavos(equipos_clasificados):
             contrario_1A = comb[3]
             contrario_1C = comb[4]
 
+    # busca un equipo por su alias (ej: "3A" = tercero del grupo A)
     def buscar_equipo(alias):
         if alias == "":
             return ("", "")
@@ -186,13 +204,14 @@ def definir_enfrentamientos_octavos(equipos_clasificados):
                     return (eq[0], eq[1])
         return ("", "")
 
+    # estructura de enfrentamientos según formato fifa
     enfrentamientos_alias = [
         (1, "2A", "2C"),
         (2, "1D", contrario_1D),
         (3, "1B", contrario_1B),
         (4, "1F", "2E"),
         (5, "1E", "2D"),
-        (6, "1C", contrario_1C),  # ✅ ahora usa su propio contrario
+        (6, "1C", contrario_1C),  
         (7, "2B", "2F"),
         (8, "1A", contrario_1A)
     ]
@@ -200,6 +219,7 @@ def definir_enfrentamientos_octavos(equipos_clasificados):
     resultado = []
     usados = set()
 
+    # convertir alias a equipos reales
     for id_partido, alias1, alias2 in enfrentamientos_alias:
         id1, pais1 = buscar_equipo(alias1)
         id2, pais2 = buscar_equipo(alias2)
@@ -210,16 +230,20 @@ def definir_enfrentamientos_octavos(equipos_clasificados):
 
     return resultado
 
+
+# obtiene la última fecha/jornada registrada en el torneo
 def ultima_fecha_jornada():
     conn = conectar()
     cursor = conn.cursor()
     
+    # verificar si existe la tabla de estado del torneo
     cursor.execute("""
         SELECT name FROM sqlite_master 
         WHERE type='table' AND name='estado_torneo'
     """)
     tabla_existe = cursor.fetchone()
     
+    # crear tabla si no existe
     if not tabla_existe:
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS estado_torneo (
@@ -241,7 +265,7 @@ def ultima_fecha_jornada():
     return resultado[0] if resultado else 1
 
 
-# 🔧 CORREGIDO: ahora usa asignar funciones con penales y flujo actualizado
+# se ejecuta al cerrar una jornada en el registro de resultados - avanza el torneo y genera siguientes enfrentamientos
 def cerrar_jornada():
     from tkinter import messagebox
     import traceback
@@ -259,6 +283,7 @@ def cerrar_jornada():
     jornada_actual = result[0]
     nueva_jornada = jornada_actual + 1
 
+    # actualizar estado del torneo
     cursor.execute("""
         UPDATE estado_torneo 
         SET jornada_actual = ?, 
@@ -269,6 +294,7 @@ def cerrar_jornada():
     conn.commit()
     conn.close()
 
+    # generar siguientes enfrentamientos según la jornada completada
     try:
         if jornada_actual == 3:
             messagebox.showinfo("Info", "Generando octavos de final...")
@@ -280,18 +306,18 @@ def cerrar_jornada():
 
         elif jornada_actual == 4:
             messagebox.showinfo("Info", "Generando cuartos de final...")
-            asignar_equipos_cuartos()  # 🔧 CORREGIDO: nombre de función
+            asignar_equipos_cuartos()
             messagebox.showinfo("Éxito", "✅ Cuartos de final asignados correctamente (con penales)")
 
         elif jornada_actual == 5:
             messagebox.showinfo("Info", "Generando semifinales...")
-            asignar_equipos_semifinales()  # 🔧 CORREGIDO: nombre de función
+            asignar_equipos_semifinales()
             messagebox.showinfo("Éxito", "✅ Semifinales asignadas correctamente (con penales)")
 
         elif jornada_actual == 6:
             messagebox.showinfo("Info", "Generando final y tercer puesto...")
-            asignar_equipos_tercer_puesto()  # 🔧 CORREGIDO: nombre de función
-            asignar_equipos_final()  # 🔧 CORREGIDO: nombre de función
+            asignar_equipos_tercer_puesto()
+            asignar_equipos_final()
             messagebox.showinfo("Éxito", "✅ Final y tercer puesto asignados correctamente (con penales)")
 
     except Exception as e:
@@ -301,6 +327,7 @@ def cerrar_jornada():
     return nueva_jornada
 
 
+# verifica si todas las fechas y horas de los partidos están cargadas
 def carga_completa_fechas():
     conn = conectar()
     cursor = conn.cursor()
@@ -324,6 +351,7 @@ def carga_completa_fechas():
     return True
 
 
+# obtiene los ids de partidos correspondientes a una jornada específica
 def obtener_ids_partidos_jornada(jornada):
     if jornada == 1:
         return list(range(1, 13))
@@ -344,6 +372,7 @@ def obtener_ids_partidos_jornada(jornada):
     return []
 
 
+# asigna los equipos a los partidos de octavos de final en la base de datos
 def asignar_equipos_octavos(enfrentamientos):
     from tkinter import messagebox
     conn = conectar()
@@ -364,6 +393,7 @@ def asignar_equipos_octavos(enfrentamientos):
     messagebox.showinfo("Asignación Completada", info_asignacion)
 
 
+# determina ganadores en partidos de una jornada, útil para armar tabla de posiciones y para cerrar jornadas eliminatorias
 def obtener_ganadores_jornada(jornada):
     conn = conectar()
     cursor = conn.cursor()
@@ -382,19 +412,20 @@ def obtener_ganadores_jornada(jornada):
         elif goles2 > goles1:
             ganadores.append(equipo2)
         else:
-            # 🔧 AGREGADO: Verificación de penales para octavos
+            # verificación de penales para desempate
             penales = get_penales_por_partido(id_partido)
             if penales:
                 p1, p2 = penales
                 ganador = equipo1 if p1 > p2 else equipo2
                 ganadores.append(ganador)
             else:
-                # Si no hay penales, se asume el primer equipo como ganador (esto podría mejorarse)
+                # si no hay penales, se asume el primer equipo como ganador 
                 ganadores.append(equipo1)
     conn.close()
     return ganadores
 
 
+# obtiene tanto ganadores como perdedores de una jornada (útil para partido de tercer puesto)
 def obtener_ganadores_y_perdedores_jornada(jornada):
     conn = conectar()
     cursor = conn.cursor()
@@ -415,7 +446,7 @@ def obtener_ganadores_y_perdedores_jornada(jornada):
             ganadores.append(equipo2)
             perdedores.append(equipo1)
         else:
-            # 🔧 AGREGADO: Verificación de penales para octavos
+            # verificación de penales para desempate
             penales = get_penales_por_partido(id_partido)
             if penales:
                 p1, p2 = penales
@@ -426,13 +457,14 @@ def obtener_ganadores_y_perdedores_jornada(jornada):
                     ganadores.append(equipo2)
                     perdedores.append(equipo1)
             else:
-                # Si no hay penales, se asume el primer equipo como ganador
+                # si no hay penales, se asume el primer equipo como ganador
                 ganadores.append(equipo1)
                 perdedores.append(equipo2)
     conn.close()
     return ganadores, perdedores
 
 
+# genera los enfrentamientos para cuartos de final basado en ganadores de octavos
 def generar_enfrentamientos_cuartos(ganadores_octavos):
     enfrentamientos = [
         (1, ganadores_octavos[0], ganadores_octavos[1]),
@@ -443,6 +475,7 @@ def generar_enfrentamientos_cuartos(ganadores_octavos):
     return enfrentamientos
 
 
+# genera los enfrentamientos para semifinales basado en ganadores de cuartos
 def generar_enfrentamientos_semifinales(ganadores_cuartos):
     enfrentamientos = [
         (1, ganadores_cuartos[0], ganadores_cuartos[1]),
@@ -451,22 +484,23 @@ def generar_enfrentamientos_semifinales(ganadores_cuartos):
     return enfrentamientos
 
 
+# genera el enfrentamiento para la final basado en ganadores de semifinales
 def generar_enfrentamiento_final(ganadores_semifinales):
     return [(1, ganadores_semifinales[0], ganadores_semifinales[1])]
 
 
+# genera el enfrentamiento para tercer puesto basado en perdedores de semifinales
 def generar_enfrentamiento_tercer_puesto(perdedores_semifinales):
     return [(1, perdedores_semifinales[0], perdedores_semifinales[1])]
 
 
-# 🔧 CORREGIDO: Funciones con nombres correctos y con verificación de penales
-
+# asigna equipos a los partidos de cuartos de final en la base de datos
 def asignar_equipos_cuartos():
     from tkinter import messagebox
     conn = conectar()
     cursor = conn.cursor()
     
-    # Obtener ganadores de octavos con verificación de penales
+    # obtener ganadores de octavos con verificación de penales
     ganadores_octavos = obtener_ganadores_jornada(4)
     
     if len(ganadores_octavos) != 8:
@@ -493,12 +527,13 @@ def asignar_equipos_cuartos():
     messagebox.showinfo("Asignación Completada", info_asignacion)
 
 
+# asigna equipos a los partidos de semifinales en la base de datos
 def asignar_equipos_semifinales():
     from tkinter import messagebox
     conn = conectar()
     cursor = conn.cursor()
     
-    # Obtener ganadores de cuartos con verificación de penales
+    # obtener ganadores de cuartos con verificación de penales
     ganadores_cuartos = obtener_ganadores_jornada(5)
     
     if len(ganadores_cuartos) != 4:
@@ -525,12 +560,13 @@ def asignar_equipos_semifinales():
     messagebox.showinfo("Asignación Completada", info_asignacion)
 
 
+# asigna equipos al partido de la final en la base de datos
 def asignar_equipos_final():
     from tkinter import messagebox
     conn = conectar()
     cursor = conn.cursor()
     
-    # Obtener ganadores de semifinales con verificación de penales
+    # obtener ganadores de semifinales con verificación de penales
     ganadores_semifinales = obtener_ganadores_jornada(6)
     
     if len(ganadores_semifinales) != 2:
@@ -539,7 +575,7 @@ def asignar_equipos_final():
         return
     
     enfrentamientos = generar_enfrentamiento_final(ganadores_semifinales)
-    ids_partidos = obtener_ids_partidos_jornada(8)  # Jornada 8 para la final
+    ids_partidos = obtener_ids_partidos_jornada(8)  # jornada 8 para la final
     
     info_asignacion = "Asignando equipos a la final:\n\n"
     for i, (_, equipo1, equipo2) in enumerate(enfrentamientos):
@@ -557,12 +593,13 @@ def asignar_equipos_final():
     messagebox.showinfo("Asignación Completada", info_asignacion)
 
 
+# asigna equipos al partido por tercer puesto en la base de datos
 def asignar_equipos_tercer_puesto():
     from tkinter import messagebox
     conn = conectar()
     cursor = conn.cursor()
     
-    # Obtener perdedores de semifinales
+    # obtener perdedores de semifinales
     _, perdedores_semifinales = obtener_ganadores_y_perdedores_jornada(6)
     
     if len(perdedores_semifinales) != 2:
@@ -571,7 +608,7 @@ def asignar_equipos_tercer_puesto():
         return
     
     enfrentamientos = generar_enfrentamiento_tercer_puesto(perdedores_semifinales)
-    ids_partidos = obtener_ids_partidos_jornada(7)  # Jornada 7 para tercer puesto
+    ids_partidos = obtener_ids_partidos_jornada(7)  # jornada 7 para tercer puesto
     
     info_asignacion = "Asignando equipos al partido por tercer puesto:\n\n"
     for i, (_, equipo1, equipo2) in enumerate(enfrentamientos):
