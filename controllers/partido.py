@@ -49,20 +49,6 @@ def update_partido_fecha(idPartido, fecha, hora, estadio):
     conn.commit()
     conn.close()
 
-# OBTENER PARTIDOS SIN JUGAR
-def get_partido_sin_jugar():
-    """Devuelve los partidos (id, fecha, equipos) que aún no se han jugado."""
-    conn = conectar()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT idPartido, fecha, identificadorEquipoUno, identificadorEquipoDos
-        FROM partido
-        WHERE golesEquipoUno = 0 AND golesEquipoDos = 0
-    """)
-    partidos = cursor.fetchall()
-    conn.close()
-    return partidos
-
 # LISTA CON TODOS LOS PARTIDOS Y SUS DATOS PRINCIPALES
 def get_partidos():
     conn = conectar()
