@@ -47,11 +47,15 @@ def pantalla_informes(ventana, volver_menu):
         fg="#333333"
     ).pack(pady=10)
 
+    # 🔧 CORREGIDO: Usar fuente monoespaciada para alineación
+    # Crear una fuente monoespaciada
+    fuente_mono = tkfont.Font(family="Courier New", size=10)
+    
     # área de texto para mostrar resultados
     texto_resultados = tk.Text(
         frame_resultados,
         wrap=tk.WORD,
-        font=("Segoe UI", 10),
+        font=fuente_mono,  # 🔧 CAMBIADO: Usar fuente monoespaciada
         bg="#fafafa",
         fg="#333333",
         padx=10,
@@ -127,7 +131,7 @@ def pantalla_informes(ventana, volver_menu):
                 for id_partido, fecha_p, equipo1, equipo2, jornada, fase, hora, estadio in resultados:
                     texto += f"⏰ {hora} - {equipo1} vs {equipo2}\n"
                     texto += f"   📍 {fase} - Jornada {jornada}\n"
-                    texto += f"   🏟️ Estadio: {estadio}\n"
+                    texto += f"   🏟️  Estadio: {estadio}\n"
                     texto += f"   🆔 Partido ID: {id_partido}\n"
                     texto += "-" * 40 + "\n"
 
@@ -145,7 +149,7 @@ def pantalla_informes(ventana, volver_menu):
         ventana_grupo = tk.Toplevel(ventana)
         ventana_grupo.title("Tabla de Posiciones por Grupo")
         ventana_grupo.configure(bg="#f8f8f8")
-        ventana_grupo.geometry("350x180")
+        ventana_grupo.geometry("400x200")
         ventana_grupo.transient(ventana)
         ventana_grupo.grab_set()
 
@@ -182,15 +186,19 @@ def pantalla_informes(ventana, volver_menu):
                     mostrar_resultados(f"No hay datos para el grupo {grupo} hasta la fecha {fecha}")
                     return
 
+                # 🔧 MEJORADO: Formato de tabla más preciso con fuente mono
                 texto = f"🏆 TABLA DE POSICIONES - GRUPO {grupo_nombre}\n"
                 texto += f"📅 Hasta: {fecha_limite}\n\n"
-                texto += "=" * 70 + "\n"
-                texto += f"{'Equipo':<15} {'PJ':<3} {'PG':<3} {'PE':<3} {'PP':<3} {'GF':<3} {'GC':<3} {'DG':<4} {'Pts':<3}\n"
-                texto += "=" * 70 + "\n"
+                texto += "=" * 75 + "\n"
+                texto += f"{'Pos':<3} {'Equipo':<18} {'PJ':>2} {'PG':>2} {'PE':>2} {'PP':>2} {'GF':>2} {'GC':>2} {'DG':>3} {'Pts':>3}\n"
+                texto += "=" * 75 + "\n"
 
-                for pais, PJ, PG, PE, PP, GF, GC, DG, Pts in tabla:
-                    texto += f"{pais:<15} {PJ:<3} {PG:<3} {PE:<3} {PP:<3} {GF:<3} {GC:<3} {DG:<4} {Pts:<3}\n"
+                for pos, (pais, PJ, PG, PE, PP, GF, GC, DG, Pts) in enumerate(tabla, 1):
+                    # Acortar nombres largos de equipos para mejor alineación
+                    pais_corto = (pais[:16] + '..') if len(pais) > 18 else pais.ljust(18)
+                    texto += f"{pos:<3} {pais_corto} {PJ:>2} {PG:>2} {PE:>2} {PP:>2} {GF:>2} {GC:>2} {DG:>3} {Pts:>3}\n"
 
+                texto += "=" * 75 + "\n"
                 mostrar_resultados(texto)
 
             except ValueError:
@@ -206,7 +214,7 @@ def pantalla_informes(ventana, volver_menu):
         ventana_equipo = tk.Toplevel(ventana)
         ventana_equipo.title("Cuadro de Resultados por Equipo")
         ventana_equipo.configure(bg="#f8f8f8")
-        ventana_equipo.geometry("350x180")
+        ventana_equipo.geometry("400x200")
         ventana_equipo.transient(ventana)
         ventana_equipo.grab_set()
 
@@ -242,7 +250,7 @@ def pantalla_informes(ventana, volver_menu):
                 texto = f"⚽ CUADRO DE RESULTADOS - {equipo_nombre}\n"
                 texto += f"📅 Hasta: {fecha_limite}\n"
                 texto += f"📊 Estado: {estado}\n\n"
-                texto += "=" * 60 + "\n\n"
+                texto += "=" * 70 + "\n\n"
 
                 if not partidos:
                     texto += "No hay partidos disputados hasta esta fecha\n"
@@ -250,8 +258,8 @@ def pantalla_informes(ventana, volver_menu):
                     for fecha_p, fase, eq1, g1, eq2, g2, estadio in partidos:
                         texto += f"📅 {fecha_p} - {fase}\n"
                         texto += f"   {eq1} {g1} - {g2} {eq2}\n"
-                        texto += f"   🏟️ Estadio: {estadio}\n"
-                        texto += "-" * 40 + "\n"
+                        texto += f"   🏟️  {estadio}\n"
+                        texto += "-" * 50 + "\n"
 
                 mostrar_resultados(texto)
 
@@ -268,7 +276,7 @@ def pantalla_informes(ventana, volver_menu):
         ventana_equipo = tk.Toplevel(ventana)
         ventana_equipo.title("Próximo Partido de un Equipo")
         ventana_equipo.configure(bg="#f8f8f8")
-        ventana_equipo.geometry("350x150")
+        ventana_equipo.geometry("350x200")
         ventana_equipo.transient(ventana)
         ventana_equipo.grab_set()
 
@@ -313,7 +321,7 @@ def pantalla_informes(ventana, volver_menu):
                     texto += f"⏰ Hora: {hora}\n"
                     texto += f"⚽ Partido: {eq1} vs {eq2}\n"
                     texto += f"📍 {fase} - Jornada {jornada}\n"
-                    texto += f"🏟️ Estadio: {estadio}\n"
+                    texto += f"🏟️  Estadio: {estadio}\n"
 
                 mostrar_resultados(texto)
 
@@ -330,7 +338,7 @@ def pantalla_informes(ventana, volver_menu):
         ventana_fecha = tk.Toplevel(ventana)
         ventana_fecha.title("Tabla General de Todos los Grupos")
         ventana_fecha.configure(bg="#f8f8f8")
-        ventana_fecha.geometry("300x120")
+        ventana_fecha.geometry("300x150")
         ventana_fecha.transient(ventana)
         ventana_fecha.grab_set()
 
@@ -350,21 +358,22 @@ def pantalla_informes(ventana, volver_menu):
 
                 texto = f"🏆 TABLA GENERAL DE POSICIONES\n"
                 texto += f"📅 Hasta: {fecha}\n\n"
-                texto += "=" * 70 + "\n\n"
+                texto += "=" * 75 + "\n\n"
 
                 if not resultados:
                     texto += "No hay datos disponibles para los grupos\n"
                 else:
                     for fecha_g, grupo, tabla in resultados:
                         texto += f"📊 GRUPO {grupo}\n"
-                        texto += "=" * 70 + "\n"
-                        texto += f"{'Equipo':<15} {'PJ':<3} {'PG':<3} {'PE':<3} {'PP':<3} {'GF':<3} {'GC':<3} {'DG':<4} {'Pts':<3}\n"
-                        texto += "-" * 70 + "\n"
+                        texto += "=" * 75 + "\n"
+                        texto += f"{'Pos':<3} {'Equipo':<18} {'PJ':>2} {'PG':>2} {'PE':>2} {'PP':>2} {'GF':>2} {'GC':>2} {'DG':>3} {'Pts':>3}\n"
+                        texto += "-" * 75 + "\n"
 
-                        for pais, PJ, PG, PE, PP, GF, GC, DG, Pts in tabla:
-                            texto += f"{pais:<15} {PJ:<3} {PG:<3} {PE:<3} {PP:<3} {GF:<3} {GC:<3} {DG:<4} {Pts:<3}\n"
+                        for pos, (pais, PJ, PG, PE, PP, GF, GC, DG, Pts) in enumerate(tabla, 1):
+                            pais_corto = (pais[:16] + '..') if len(pais) > 18 else pais.ljust(18)
+                            texto += f"{pos:<3} {pais_corto} {PJ:>2} {PG:>2} {PE:>2} {PP:>2} {GF:>2} {GC:>2} {DG:>3} {Pts:>3}\n"
 
-                        texto += "\n" + "═" * 70 + "\n\n"
+                        texto += "\n" + "═" * 75 + "\n\n"
 
                 mostrar_resultados(texto)
 

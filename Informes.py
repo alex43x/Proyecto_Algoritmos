@@ -1,5 +1,6 @@
 from controllers.pool import conectar
 from datetime import datetime
+from controllers.penales import get_penales_por_partido
 
 def InformeUno(fecha):
     """
@@ -63,7 +64,6 @@ def InformeDos(grupo_nombre, fecha_limite):
         (pais, PJ, PG, PE, PP, GF, GC, DG, Pts)
     ]
     """
-
     conn = conectar()
     cursor = conn.cursor()
 
@@ -97,7 +97,6 @@ def InformeDos(grupo_nombre, fecha_limite):
     tabla = []
 
     for id_equipo, pais in equipos:
-
         PJ = PG = PE = PP = GF = GC = 0
 
         # Partidos como equipo uno
@@ -144,19 +143,20 @@ def InformeDos(grupo_nombre, fecha_limite):
 
         DG = GF - GC
         Pts = PG * 3 + PE
-
         tabla.append((pais, PJ, PG, PE, PP, GF, GC, DG, Pts))
 
     conn.close()
-    # tabla = [(pais, PJ, PG, PE, PP, GF, GC, DG, Pts)]
-    # Orden requerido: Pts → DG → GF
+    
+    # Ordenar tabla
     def criterio_orden(fila):
         pais, PJ, PG, PE, PP, GF, GC, DG, Pts = fila
         return (Pts, DG, GF)
 
     tabla.sort(key=criterio_orden, reverse=True)
-
+    
+    # 🔧 MANTENER ESTRUCTURA ORIGINAL para compatibilidad
     return (grupo_nombre, fecha_limite, tabla)
+
 def InformeTres(equipo_nombre, fecha):
     """
     Informe 3:
@@ -165,12 +165,7 @@ def InformeTres(equipo_nombre, fecha):
 
     Retorna:
         (equipo_nombre, fecha, lista_partidos, estado_final)
-
-        lista_partidos = [
-            (fecha_partido, fase, equipo1, goles1, equipo2, goles2, estadio)
-        ]
     """
-
     conn = conectar()
     cursor = conn.cursor()
 
@@ -189,6 +184,7 @@ def InformeTres(equipo_nombre, fecha):
 
     cursor.execute("""
         SELECT 
+            p.idPartido,
             p.fecha,
             p.jornada,
             e1.pais AS equipo_uno,
@@ -213,7 +209,7 @@ def InformeTres(equipo_nombre, fecha):
     lista_partidos = []
     ultima_jornada = 1
 
-    for fecha_p, jornada, eq1, eq2, g1, g2, estadio in partidos_raw:
+    for id_partido, fecha_p, jornada, eq1, eq2, g1, g2, estadio in partidos_raw:
 
         if jornada in (1, 2, 3):
             fase = "Fase de Grupos"
@@ -230,31 +226,104 @@ def InformeTres(equipo_nombre, fecha):
         else:
             fase = "Desconocida"
 
-        lista_partidos.append((fecha_p, fase, eq1, g1, eq2, g2, estadio))
+        # 🔧 AGREGADO: Obtener información de penales
+        info_penales = ""
+        penales1 = penales2 = 0
+        
+        if jornada >= 4:  # Solo en fase eliminatoria
+            penales = get_penales_por_partido(id_partido)
+            if penales:
+                penales1, penales2 = penales
+                if g1 == g2:  # Solo mostrar penales si hubo empate
+                    info_penales = f" ({penales1}-{penales2} penales)"
+
+        # 🔧 MODIFICADO: Mantener estructura original de 7 elementos para compatibilidad
+        estadio_con_penales = estadio
+        if info_penales:
+            estadio_con_penales = f"{estadio}{info_penales}"
+
+        lista_partidos.append((fecha_p, fase, eq1, g1, eq2, g2, estadio_con_penales))
 
         if jornada > ultima_jornada:
             ultima_jornada = jornada
 
-    if ultima_jornada <= 3:
-        estado_final = "En Fase de Grupos"
-    elif ultima_jornada == 4:
-        estado_final = "En Octavos de Final"
-    elif ultima_jornada == 5:
-        estado_final = "En Cuartos de Final"
-    elif ultima_jornada == 6:
-        estado_final = "En Semifinal"
-    elif ultima_jornada == 7:
-        estado_final = "En Tercer Puesto"
-    elif ultima_jornada == 8:
-        ult_partido = lista_partidos[-1]
-        fecha_f, fase_f, eq1_f, g1_f, eq2_f, g2_f, estadio_f = ult_partido
-        ganador = eq1_f if g1_f > g2_f else eq2_f
-        estado_final = "Campeón" if ganador == equipo_nombre else "Subcampeón"
-    else:
-        estado_final = "Participación desconocida"
+    # Determinar estado final
+    estado_final = determinar_estado_final(conn, id_equipo, equipo_nombre, ultima_jornada, partidos_raw)
 
     conn.close()
+    # 🔧 MANTENER ESTRUCTURA ORIGINAL
     return (equipo_nombre, fecha, lista_partidos, estado_final)
+
+def determinar_estado_final(conn, id_equipo, equipo_nombre, ultima_jornada, partidos_raw):
+    """
+    Determina el estado final del equipo
+    """
+    cursor = conn.cursor()
+    
+    if ultima_jornada <= 3:
+        return "En Fase de Grupos"
+    elif ultima_jornada == 4:
+        return "Eliminado en Octavos de Final" if esta_eliminado(conn, id_equipo, 4) else "En Octavos de Final"
+    elif ultima_jornada == 5:
+        return "Eliminado en Cuartos de Final" if esta_eliminado(conn, id_equipo, 5) else "En Cuartos de Final"
+    elif ultima_jornada == 6:
+        return "Eliminado en Semifinal" if esta_eliminado(conn, id_equipo, 6) else "En Semifinal"
+    elif ultima_jornada == 7:
+        # Para tercer puesto
+        ultimo_partido = partidos_raw[-1] if partidos_raw else None
+        if ultimo_partido:
+            id_partido, fecha_p, jornada, eq1, eq2, g1, g2, estadio = ultimo_partido
+            if determinar_ganador_partido(id_partido, eq1, g1, eq2, g2) == equipo_nombre:
+                return "Tercer Lugar"
+            else:
+                return "Cuarto Lugar"
+        return "En Tercer Puesto"
+    elif ultima_jornada == 8:
+        # Para la final
+        ultimo_partido = partidos_raw[-1] if partidos_raw else None
+        if ultimo_partido:
+            id_partido, fecha_p, jornada, eq1, eq2, g1, g2, estadio = ultimo_partido
+            if determinar_ganador_partido(id_partido, eq1, g1, eq2, g2) == equipo_nombre:
+                return "Campeón"
+            else:
+                return "Subcampeón"
+    return "Participación desconocida"
+
+def esta_eliminado(conn, id_equipo, jornada_eliminacion):
+    """Determina si un equipo fue eliminado en una jornada específica"""
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT idPartido, identificadorEquipoUno, identificadorEquipoDos, 
+               golesEquipoUno, golesEquipoDos
+        FROM partido 
+        WHERE (identificadorEquipoUno = ? OR identificadorEquipoDos = ?)
+          AND jornada = ?
+        ORDER BY fecha DESC 
+        LIMIT 1
+    """, (id_equipo, id_equipo, jornada_eliminacion))
+    
+    partido = cursor.fetchone()
+    if not partido:
+        return True
+    
+    id_partido, eq1, eq2, g1, g2 = partido
+    ganador = determinar_ganador_partido(id_partido, eq1, g1, eq2, g2)
+    return ganador != id_equipo
+
+def determinar_ganador_partido(id_partido, eq1, g1, eq2, g2):
+    """Determina el ganador de un partido considerando penales"""
+    if g1 > g2:
+        return eq1
+    elif g2 > g1:
+        return eq2
+    else:
+        penales = get_penales_por_partido(id_partido)
+        if penales:
+            p1, p2 = penales
+            return eq1 if p1 > p2 else eq2
+        else:
+            return eq1
 
 def InformeCuatro(equipo_nombre, fecha_limite):
     """
@@ -264,11 +333,7 @@ def InformeCuatro(equipo_nombre, fecha_limite):
 
     Retorna:
         (equipo_nombre, fecha_limite, partido)
-
-    donde partido =
-        (fecha, hora, equipo1, equipo2, jornada, fase, estadio)
     """
-
     conn = conectar()
     cursor = conn.cursor()
 
@@ -326,9 +391,9 @@ def InformeCuatro(equipo_nombre, fecha_limite):
     else:
         fase = "Desconocida"
 
+    # 🔧 MANTENER ESTRUCTURA ORIGINAL
     return (equipo_nombre, fecha_limite,
             (fecha_p, hora, eq1, eq2, jornada, fase, estadio))
-
 
 def InformeCinco(fecha):
     """
@@ -339,7 +404,6 @@ def InformeCinco(fecha):
     Retorna:
         ( [(fecha, grupo, [(pais, PJ, PG, PE, PP, GF, GC, DG, Pts), ... ]), ... ] )
     """
-
     conn = conectar()
     cursor = conn.cursor()
 
@@ -373,7 +437,6 @@ def InformeCinco(fecha):
         tabla = []
 
         for id_equipo, pais in equipos:
-
             PJ = PG = PE = PP = GF = GC = 0
 
             # Como equipo uno
@@ -420,15 +483,81 @@ def InformeCinco(fecha):
 
             DG = GF - GC
             Pts = PG * 3 + PE
-
             tabla.append((pais, PJ, PG, PE, PP, GF, GC, DG, Pts))
 
         # Orden final
         tabla.sort(key=criterio_orden, reverse=True)
-
         resultados_finales.append((fecha, nombre_grupo, tabla))
 
     conn.close()
 
+    # 🔧 MANTENER ESTRUCTURA ORIGINAL
     return resultados_finales
 
+# 🔧 FUNCIONES ADICIONALES PARA FORMATEO (opcionales)
+def formatear_informe_dos(grupo_nombre, fecha_limite):
+    """
+    Función opcional para obtener el informe 2 formateado como texto
+    """
+    grupo, fecha, tabla = InformeDos(grupo_nombre, fecha_limite)
+    
+    if not tabla:
+        return f"❌ No hay datos para el Grupo {grupo_nombre} hasta {fecha_limite}"
+    
+    return _formatear_tabla_grupo(grupo, fecha, tabla)
+
+def formatear_informe_cinco(fecha):
+    """
+    Función opcional para obtener el informe 5 formateado como texto
+    """
+    resultados = InformeCinco(fecha)
+    
+    if not resultados:
+        return f"❌ No hay datos de grupos hasta la fecha {fecha}"
+    
+    tablas_formateadas = []
+    tablas_formateadas.append(f"🏆 TABLA DE POSICIONES - TODOS LOS GRUPOS")
+    tablas_formateadas.append(f"📅 Actualizado al {fecha}")
+    tablas_formateadas.append("")
+    
+    for fecha_grupo, grupo_nombre, tabla in resultados:
+        if tabla:
+            tabla_grupo = _formatear_tabla_grupo(grupo_nombre, fecha_grupo, tabla)
+            tablas_formateadas.append(tabla_grupo)
+            tablas_formateadas.append("")
+    
+    return "\n".join(tablas_formateadas)
+
+def _formatear_tabla_grupo(grupo_nombre, fecha_limite, tabla):
+    """
+    Función interna para formatear tablas de grupos
+    """
+    encabezados = ["Pos", "Equipo", "PJ", "PG", "PE", "PP", "GF", "GC", "DG", "Pts"]
+    anchos = [4, 20, 3, 3, 3, 3, 3, 3, 4, 4]
+    
+    linea_encabezado = " | ".join(encabezados[i].center(anchos[i]) for i in range(len(encabezados)))
+    separador = "-" * len(linea_encabezado)
+    
+    resultado = []
+    resultado.append(f"🏆 GRUPO {grupo_nombre} - Hasta {fecha_limite}")
+    resultado.append(separador)
+    resultado.append(linea_encabezado)
+    resultado.append(separador)
+    
+    for pos, (pais, PJ, PG, PE, PP, GF, GC, DG, Pts) in enumerate(tabla, 1):
+        fila = [
+            str(pos).rjust(anchos[0]),
+            pais.ljust(anchos[1]),
+            str(PJ).center(anchos[2]),
+            str(PG).center(anchos[3]),
+            str(PE).center(anchos[4]),
+            str(PP).center(anchos[5]),
+            str(GF).center(anchos[6]),
+            str(GC).center(anchos[7]),
+            str(DG).rjust(anchos[8]),
+            str(Pts).center(anchos[9])
+        ]
+        resultado.append(" | ".join(fila))
+    
+    resultado.append(separador)
+    return "\n".join(resultado)
