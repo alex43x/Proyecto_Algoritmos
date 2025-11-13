@@ -3,8 +3,7 @@ from tkinter import ttk, messagebox
 import re
 import datetime
 from controllers.partido import get_partidos, update_partido_fecha
-from utils import carga_completa_fechas  # Importar la función
-
+from utils import carga_completa_fechas  
 
 def form_partidos(ventana_padre, callback_actualizar=None):
     """
@@ -80,7 +79,7 @@ def form_partidos(ventana_padre, callback_actualizar=None):
         "estadio": "Estadio"
     }
 
-    # Configuración de columnas (ajuste solicitado)
+    # Configuración de columnas 
     tabla.column("idPartido", anchor="center", width=60)
     tabla.column("equipo1", anchor="center", width=130)
     tabla.column("equipo2", anchor="center", width=130)
@@ -227,7 +226,7 @@ def form_partidos(ventana_padre, callback_actualizar=None):
                 errores.append(f"Partido {equipo1} vs {equipo2}: Hora inválida '{hora}'. Usa HH:MM.")
                 continue
 
-            # Solo actualizar si hay al menos uno de los campos cargados
+            # Solo actualiza si hay al menos uno de los campos cargados
             if fecha.strip() or hora.strip() or estadio.strip():
                 try:
                     fecha_db = fecha.strip() if fecha.strip() else None

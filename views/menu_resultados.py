@@ -3,9 +3,10 @@ from tkinter import ttk, messagebox
 from controllers.partido import get_partidos, update_partido
 from controllers.penales import registrar_penales, get_penales_por_partido
 from utils import ultima_fecha_jornada, cerrar_jornada, carga_completa_fechas
-from controllers.pool import conectar  # 🔧 AGREGADO: Para consultar el ganador
+from controllers.pool import conectar  # para consultar el ganador
 
 
+# pantalla principal para registrar resultados de partidos
 def pantalla_resultados(ventana, volver_menu):
     # limpiar la ventana principal
     for widget in ventana.winfo_children():
@@ -13,7 +14,7 @@ def pantalla_resultados(ventana, volver_menu):
 
     ventana.configure(bg="#f8f8f8")
 
-    # Verificar si todas las fechas están cargadas
+    # verificar si todas las fechas están cargadas antes de permitir el registro
     if not carga_completa_fechas():
         messagebox.showwarning(
             "Calendario Incompleto",
@@ -35,7 +36,7 @@ def pantalla_resultados(ventana, volver_menu):
     # obtener jornada actual desde la tabla estado_torneo
     jornada_actual = ultima_fecha_jornada()
 
-    # Verificar si el torneo terminó
+    # verificar si el torneo terminó
     if jornada_actual > 8:
         messagebox.showinfo(
             "Torneo Finalizado",
@@ -49,6 +50,7 @@ def pantalla_resultados(ventana, volver_menu):
     frame_tabla = tk.Frame(ventana, bg="#f8f8f8")
     frame_tabla.pack(fill="both", expand=True, padx=20, pady=10)
 
+    # definir columnas de la tabla según la fase del torneo
     columnas = (
         "idPartido", "equipo1", "equipo2", "jornada",
         "fecha", "hora",
@@ -57,13 +59,15 @@ def pantalla_resultados(ventana, volver_menu):
         "rojas1", "rojas2"
     )
 
-    # 🔧 CORREGIDO: Ahora incluye penales desde octavos (jornada 4) en adelante
-    if jornada_actual >= 4:  # Cambiado de 5 a 4 para incluir octavos
+    # agregar columnas de penales desde octavos de final (jornada 4) en adelante
+    if jornada_actual >= 4:
         columnas += ("penales1", "penales2")
 
+    # crear tabla treeview
     tabla = ttk.Treeview(frame_tabla, columns=columnas, show="headings", height=18)
     tabla.pack(fill="both", expand=True)
 
+    # configurar encabezados de columnas
     encabezados = {
         "idPartido": "ID",
         "equipo1": "Equipo 1",
@@ -79,22 +83,23 @@ def pantalla_resultados(ventana, volver_menu):
         "rojas2": "TR E2",
     }
 
-    # 🔧 CORREGIDO: Agregar encabezados de penales desde octavos
-    if jornada_actual >= 4:  # Cambiado de 5 a 4 para incluir octavos
+    # agregar encabezados de penales para fase eliminatoria
+    if jornada_actual >= 4:
         encabezados["penales1"] = "Penales E1"
         encabezados["penales2"] = "Penales E2"
 
+    # aplicar encabezados a la tabla
     for col in columnas:
         tabla.heading(col, text=encabezados[col])
         tabla.column(col, anchor="center", width=85)
 
-    # obtener todos los partidos
+    # obtener todos los partidos de la base de datos
     partidos = get_partidos()
 
-    # filtrar solo los de la jornada actual
+    # filtrar solo los partidos de la jornada actual
     partidos_actual = [p for p in partidos if int(p[13]) == int(jornada_actual)]
 
-    # si no hay partidos para esa jornada
+    # verificar si hay partidos para la jornada actual
     if not partidos_actual:
         messagebox.showinfo("Información", "No hay más partidos en el torneo.")
         volver_menu(ventana)
@@ -102,13 +107,14 @@ def pantalla_resultados(ventana, volver_menu):
 
     # cargar datos en la tabla
     for p in partidos_actual:
-        # 🔧 CORREGIDO: Buscar penales desde octavos (jornada 4)
+        # obtener datos de penales para fase eliminatoria
         penales = get_penales_por_partido(p[0]) if jornada_actual >= 4 else None
 
-        # Si no hay registro de penales, inicializamos en (0, 0)
+        # si no hay registro de penales, inicializar en (0, 0)
         if penales is None:
             penales = (0, 0)
 
+        # preparar valores base para la tabla
         valores = (
             p[0], p[3], p[4], p[13], p[1], p[2],
             p[7] if p[7] is not None else "0",
@@ -119,16 +125,17 @@ def pantalla_resultados(ventana, volver_menu):
             p[12] if p[12] is not None else "0",
         )
 
-        # 🔧 CORREGIDO: Agregar penales desde octavos
-        if jornada_actual >= 4:  # Cambiado de 5 a 4 para incluir octavos
+        # agregar datos de penales para fase eliminatoria
+        if jornada_actual >= 4:
             valores += (
                 str(penales[0]),
                 str(penales[1])
             )
 
+        # insertar fila en la tabla
         tabla.insert("", "end", values=valores)
 
-    # permitir edición de celdas numéricas
+    # función para editar celdas numéricas al hacer doble clic
     def editar_celda(event):
         item = tabla.identify_row(event.y)
         col = tabla.identify_column(event.x)
@@ -158,10 +165,10 @@ def pantalla_resultados(ventana, volver_menu):
 
     tabla.bind("<Double-1>", editar_celda)
 
-    # 🔧 NUEVA FUNCIÓN: Determinar ganador de la final
+    # determinar ganador del partido de la final
     def determinar_ganador_final():
         """
-        Determina el ganador del partido de la final
+        determina el ganador del partido de la final consultando la base de datos
         """
         if jornada_actual != 8:
             return None
@@ -169,7 +176,7 @@ def pantalla_resultados(ventana, volver_menu):
         conn = conectar()
         cursor = conn.cursor()
         
-        # Buscar el partido de la final (jornada 8)
+        # buscar el partido de la final (jornada 8)
         cursor.execute("""
             SELECT p.idPartido, p.identificadorEquipoUno, p.identificadorEquipoDos,
                    p.golesEquipoUno, p.golesEquipoDos, 
@@ -188,17 +195,17 @@ def pantalla_resultados(ventana, volver_menu):
             
         id_partido, id_equipo1, id_equipo2, goles1, goles2, equipo1, equipo2 = final
         
-        # Verificar si el partido tiene resultados
+        # verificar si el partido tiene resultados
         if goles1 is None or goles2 is None:
             return None
             
-        # Determinar ganador considerando penales
+        # determinar ganador considerando penales
         if goles1 > goles2:
             return equipo1
         elif goles2 > goles1:
             return equipo2
         else:
-            # Empate - verificar penales
+            # empate - verificar penales
             penales = get_penales_por_partido(id_partido)
             if penales and penales != (0, 0):
                 p1, p2 = penales
@@ -209,7 +216,7 @@ def pantalla_resultados(ventana, volver_menu):
             else:
                 return None
 
-    # guardar resultados
+    # guardar resultados en la base de datos
     def guardar_resultados():
         filas = tabla.get_children()
         actualizados = 0
@@ -217,13 +224,14 @@ def pantalla_resultados(ventana, volver_menu):
         for f in filas:
             valores = tabla.item(f, "values")
             
-            # 🔧 CORREGIDO: Manejar diferentes estructuras según la jornada
-            if jornada_actual < 4:  # Fase de grupos
+            # manejar diferentes estructuras según la jornada
+            if jornada_actual < 4:  # fase de grupos
                 idPartido, _, _, _, _, _, g1, g2, a1, a2, r1, r2 = valores
-            else:  # Octavos en adelante
+            else:  # octavos en adelante
                 idPartido, _, _, _, _, _, g1, g2, a1, a2, r1, r2, p1, p2 = valores
 
             try:
+                # preparar datos para actualizar partido
                 datos = (
                     int(g1) if g1.strip() else 0,
                     int(g2) if g2.strip() else 0,
@@ -235,8 +243,8 @@ def pantalla_resultados(ventana, volver_menu):
                 )
                 update_partido(datos)
 
-                # 🔧 CORREGIDO: Registrar penales desde octavos
-                if jornada_actual >= 4:  # Cambiado de 5 a 4 para incluir octavos
+                # registrar penales desde octavos de final
+                if jornada_actual >= 4:
                     registrar_penales(int(idPartido),
                                       int(p1) if p1.strip() else 0,
                                       int(p2) if p2.strip() else 0)
@@ -246,7 +254,7 @@ def pantalla_resultados(ventana, volver_menu):
                 return
 
         if actualizados > 0:
-            # 🔧 AGREGADO: Mostrar mensaje del ganador si es la final
+            # mostrar mensaje del ganador si es la final
             if jornada_actual == 8:
                 ganador = determinar_ganador_final()
                 if ganador:
@@ -262,15 +270,17 @@ def pantalla_resultados(ventana, volver_menu):
             else:
                 messagebox.showinfo("✅ Cambios Guardados", f"Se actualizaron {actualizados} partido(s).")
             
+            # recargar pantalla para mostrar cambios
             pantalla_resultados(ventana, volver_menu)
         else:
             messagebox.showinfo("Sin cambios", "No se detectaron resultados nuevos.")
 
-    # cerrar jornada
+    # cerrar jornada actual y avanzar al siguiente fase
     def cerrar_jornada_accion():
         filas = tabla.get_children()
         partidos_sin_resultado = []
 
+        # verificar que todos los partidos tengan resultados
         for f in filas:
             valores = tabla.item(f, "values")
             g1, g2 = valores[6], valores[7]
@@ -285,7 +295,7 @@ def pantalla_resultados(ventana, volver_menu):
             )
             return
 
-        # 🔧 AGREGADO: Validación especial para empates en fase eliminatoria (octavos en adelante)
+        # validación especial para empates en fase eliminatoria (octavos en adelante)
         if jornada_actual >= 4:
             partidos_con_empate_sin_penales = []
             for f in filas:
@@ -293,7 +303,7 @@ def pantalla_resultados(ventana, volver_menu):
                 g1, g2 = int(valores[6].strip() or 0), int(valores[7].strip() or 0)
                 p1, p2 = int(valores[12].strip() or 0), int(valores[13].strip() or 0)
                 
-                # Si hay empate en goles pero no se registraron penales
+                # si hay empate en goles pero no se registraron penales
                 if g1 == g2 and p1 == 0 and p2 == 0:
                     partidos_con_empate_sin_penales.append(valores[1] + " vs " + valores[2])
             
@@ -307,13 +317,14 @@ def pantalla_resultados(ventana, volver_menu):
                 )
                 return
 
+        # confirmar cierre de jornada
         if messagebox.askyesno(
             "Confirmar Cierre",
             f"¿Cerrar Jornada {jornada_actual}?\nEsta acción no se podrá deshacer."
         ):
             nueva_jornada = cerrar_jornada()
             
-            # 🔧 AGREGADO: Mensaje especial si se cerró la final
+            # mensaje especial si se cerró la final
             if jornada_actual == 8:
                 ganador = determinar_ganador_final()
                 if ganador:
@@ -329,7 +340,7 @@ def pantalla_resultados(ventana, volver_menu):
             messagebox.showinfo("Jornada Cerrada", mensaje)
             pantalla_resultados(ventana, volver_menu)
 
-    # volver
+    # volver al menú principal
     def volver():
         volver_menu(ventana)
 
@@ -337,12 +348,14 @@ def pantalla_resultados(ventana, volver_menu):
     frame_botones = tk.Frame(ventana, bg="#f8f8f8")
     frame_botones.pack(pady=20)
 
+    # botón para guardar resultados
     tk.Button(
         frame_botones, text="💾 Guardar Resultados",
         font=("Segoe UI", 12), bg="#68ab98", fg="white", width=20,
         command=guardar_resultados
     ).grid(row=0, column=0, padx=10)
 
+    # botón para cerrar jornada o mostrar información de la final
     if jornada_actual < 8:
         tk.Button(
             frame_botones, text="🏁 Cerrar Jornada",
@@ -372,13 +385,14 @@ def pantalla_resultados(ventana, volver_menu):
             command=mostrar_final_torneo
         ).grid(row=0, column=1, padx=10)
 
+    # botón para volver al menú principal
     tk.Button(
         frame_botones, text="⬅ Volver al Menú",
         font=("Segoe UI", 12), bg="#68ab98", fg="white", width=20,
         command=volver
     ).grid(row=0, column=2, padx=10)
 
-    # 🔧 AGREGADO: Información sobre penales para fase eliminatoria
+    # información sobre penales para fase eliminatoria
     if jornada_actual >= 4:
         tk.Label(
             ventana,
@@ -387,7 +401,7 @@ def pantalla_resultados(ventana, volver_menu):
             fg="#e74c3c", bg="#f8f8f8"
         ).pack(side="bottom", pady=5)
 
-    # 🔧 AGREGADO: Mensaje especial para la final
+    # mensaje especial para la final mostrando el campeón actual
     if jornada_actual == 8:
         ganador = determinar_ganador_final()
         if ganador:
@@ -405,6 +419,7 @@ def pantalla_resultados(ventana, volver_menu):
                 fg="#e74c3c", bg="#f8f8f8"
             ).pack(side="bottom", pady=5)
 
+    # pie de página con información de desarrollo y jornada actual
     tk.Label(
         ventana,
         text=f"Desarrollado por Sintax FC — Jornada {jornada_actual}",

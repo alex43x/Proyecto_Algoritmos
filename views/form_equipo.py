@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from models.equipos import Equipos
-from controllers.equipos import insert_equipo, get_equipos_por_grupo
+from controllers.equipos import get_equipos_por_grupo
 from controllers.grupos import get_grupo
 
 
@@ -68,13 +68,13 @@ def form_equipo(ventana_principal, callback_actualizar):
         ventana.destroy()
         return
 
-    # Crear mapa nombre → id
+    # Crea mapa nombre → id
     mapa_grupos = {str(g[1]): g[0] for g in grupos}
 
     # Variable del OptionMenu (lo que ve el usuario)
     var_grupo = tk.StringVar(value=str(grupos[0][1]))
 
-    # Crear el menú desplegable mostrando solo los nombres
+    # Crea el menú desplegable mostrando solo los nombres
     op_grupo = tk.OptionMenu(frame_inputs, var_grupo, *[str(g[1]) for g in grupos])
     op_grupo.config(width=10, font=("Segoe UI", 12))
     op_grupo.grid(row=4, column=1, sticky="w")
@@ -128,7 +128,7 @@ def form_equipo(ventana_principal, callback_actualizar):
         command=ventana.destroy
     ).grid(row=0, column=1, padx=10)
 
-    # --- Mantener modal ---
+    # --- Manteniene modal ---
     ventana.transient(ventana_principal)
     ventana.grab_set()
     ventana_principal.wait_window(ventana)

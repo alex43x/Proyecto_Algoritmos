@@ -47,7 +47,6 @@ def pantalla_informes(ventana, volver_menu):
         fg="#333333"
     ).pack(pady=10)
 
-    # 🔧 CORREGIDO: Usar fuente monoespaciada para alineación
     # Crear una fuente monoespaciada
     fuente_mono = tkfont.Font(family="Courier New", size=10)
     
@@ -55,7 +54,7 @@ def pantalla_informes(ventana, volver_menu):
     texto_resultados = tk.Text(
         frame_resultados,
         wrap=tk.WORD,
-        font=fuente_mono,  # 🔧 CAMBIADO: Usar fuente monoespaciada
+        font=fuente_mono,  # Usa fuente monoespaciada
         bg="#fafafa",
         fg="#333333",
         padx=10,
