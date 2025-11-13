@@ -391,34 +391,7 @@ def pantalla_resultados(ventana, volver_menu):
         frame_botones, text="⬅ Volver al Menú",
         font=("Segoe UI", 12), bg="#68ab98", fg="white", width=20,
         command=volver
-    ).grid(row=0, column=2, padx=10)
-
-    # información sobre penales para fase eliminatoria
-    if jornada_actual >= 4:
-        tk.Label(
-            ventana,
-            text="💡 RECUERDA: En fase eliminatoria, los empates se resuelven por penales",
-            font=("Segoe UI", 10, "italic"),
-            fg="#e74c3c", bg="#f8f8f8"
-        ).pack(side="bottom", pady=5)
-
-    # mensaje especial para la final mostrando el campeón actual
-    if jornada_actual == 8:
-        ganador = determinar_ganador_final()
-        if ganador:
-            tk.Label(
-                ventana,
-                text=f"🏆 CAMPEÓN ACTUAL: {ganador}",
-                font=("Segoe UI", 12, "bold"),
-                fg="#f39c12", bg="#f8f8f8"
-            ).pack(side="bottom", pady=5)
-        else:
-            tk.Label(
-                ventana,
-                text="🏆 GUARDA LOS RESULTADOS PARA CORONAR AL CAMPEÓN",
-                font=("Segoe UI", 11, "bold"),
-                fg="#e74c3c", bg="#f8f8f8"
-            ).pack(side="bottom", pady=5)
+    ).grid(row=0, column=2, padx=10)  
 
     # pie de página con información de desarrollo y jornada actual
     footer_frame = tk.Frame(ventana, bg="#0f3b2f")
@@ -461,6 +434,33 @@ def pantalla_resultados(ventana, volver_menu):
         bg="#0f3b2f",
         fg="#68ab98"
     ).pack()
+    
+     # información sobre penales para fase eliminatoria
+    if jornada_actual >= 4:
+        tk.Label(
+            ventana,
+            text="💡 RECUERDA: En fase eliminatoria, los empates se resuelven por penales",
+            font=("Segoe UI", 10, "italic"),
+            fg="#ffffff", bg="#0E5D3C"
+        ).pack(side="bottom", pady=5)
+    
+    # mensaje especial para la final mostrando el campeón actual
+    if jornada_actual == 8:
+        ganador = determinar_ganador_final()
+        if ganador:
+            tk.Label(
+                footer_frame,
+                text=f"🏆 CAMPEÓN ACTUAL: {ganador}",
+                font=("Segoe UI", 12, "bold"),
+                fg="#ffffff", bg="#0E5D3C"
+            ).pack(side="bottom", pady=5)
+        else:
+            tk.Label(
+                footer_frame,
+                text="🏆 GUARDA LOS RESULTADOS PARA CORONAR AL CAMPEÓN",
+                font=("Segoe UI", 11, "bold"),
+                fg="#ffffff", bg="#0E5D3C"
+            ).pack(side="bottom", pady=5)
 
     # función para actualizar la hora en tiempo real
     def actualizar_hora():
