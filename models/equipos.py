@@ -6,13 +6,6 @@ class Equipos:
         self.abreviatura = abreviatura
         self.confederacion = confederacion
         self.idGrupo = idGrupo
-
-    def mostrarResultados(self, listaPartidos):
-        # Muestra los resultados de todos los partidos de este equipo
-        print(f"\nResultados de {self.pais}:")
-        for p in listaPartidos:
-            if p.identificadorEquipoUno == self.identificador or p.identificadorEquipoDos == self.identificador:
-                print(f"{p.fecha.strftime('%d/%m/%Y')} - {p.identificadorEquipoUno} {p.golesEquipoUno}:{p.golesEquipoDos} {p.identificadorEquipoDos}")
                 
     def guardar(self):
         insert_equipo(
