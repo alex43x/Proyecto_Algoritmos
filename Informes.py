@@ -154,7 +154,6 @@ def InformeDos(grupo_nombre, fecha_limite):
 
     tabla.sort(key=criterio_orden, reverse=True)
     
-    # 🔧 MANTENER ESTRUCTURA ORIGINAL para compatibilidad
     return (grupo_nombre, fecha_limite, tabla)
 
 def InformeTres(equipo_nombre, fecha):
@@ -226,7 +225,6 @@ def InformeTres(equipo_nombre, fecha):
         else:
             fase = "Desconocida"
 
-        # 🔧 AGREGADO: Obtener información de penales
         info_penales = ""
         penales1 = penales2 = 0
         
@@ -237,7 +235,6 @@ def InformeTres(equipo_nombre, fecha):
                 if g1 == g2:  # Solo mostrar penales si hubo empate
                     info_penales = f" ({penales1}-{penales2} penales)"
 
-        # 🔧 MODIFICADO: Mantener estructura original de 7 elementos para compatibilidad
         estadio_con_penales = estadio
         if info_penales:
             estadio_con_penales = f"{estadio}{info_penales}"
@@ -251,7 +248,6 @@ def InformeTres(equipo_nombre, fecha):
     estado_final = determinar_estado_final(conn, id_equipo, equipo_nombre, ultima_jornada, partidos_raw)
 
     conn.close()
-    # 🔧 MANTENER ESTRUCTURA ORIGINAL
     return (equipo_nombre, fecha, lista_partidos, estado_final)
 
 def determinar_estado_final(conn, id_equipo, equipo_nombre, ultima_jornada, partidos_raw):
@@ -391,7 +387,6 @@ def InformeCuatro(equipo_nombre, fecha_limite):
     else:
         fase = "Desconocida"
 
-    # 🔧 MANTENER ESTRUCTURA ORIGINAL
     return (equipo_nombre, fecha_limite,
             (fecha_p, hora, eq1, eq2, jornada, fase, estadio))
 
@@ -491,10 +486,8 @@ def InformeCinco(fecha):
 
     conn.close()
 
-    # 🔧 MANTENER ESTRUCTURA ORIGINAL
     return resultados_finales
 
-# 🔧 FUNCIONES ADICIONALES PARA FORMATEO (opcionales)
 def formatear_informe_dos(grupo_nombre, fecha_limite):
     """
     Función opcional para obtener el informe 2 formateado como texto

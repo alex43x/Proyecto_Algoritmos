@@ -185,7 +185,7 @@ def pantalla_informes(ventana, volver_menu):
                     mostrar_resultados(f"No hay datos para el grupo {grupo} hasta la fecha {fecha}")
                     return
 
-                # 🔧 MEJORADO: Formato de tabla más preciso con fuente mono
+                #  Formato de tabla con fuente mono
                 texto = f"🏆 TABLA DE POSICIONES - GRUPO {grupo_nombre}\n"
                 texto += f"📅 Hasta: {fecha_limite}\n\n"
                 texto += "=" * 75 + "\n"
